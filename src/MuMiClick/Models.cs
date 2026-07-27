@@ -54,4 +54,5 @@ public sealed class UserSettings
     public string StopHotkey { get; set; } = "F7";
     public bool StopOnPhysicalInput { get; set; }
     public string? LastMacroPath { get; set; }
+    public bool SimpleMode { get; set; }
 }

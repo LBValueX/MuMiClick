@@ -38,6 +38,7 @@ public partial class MainWindow : Window
         EventList.ItemsSource = _events;
         _settings = LoadSettings();
         RecordHotkeyBox.Text = _settings.RecordHotkey; PlayHotkeyBox.Text = _settings.PlayHotkey; PauseHotkeyBox.Text = _settings.PauseHotkey; StopHotkeyBox.Text = _settings.StopHotkey; StopPhysicalBox.IsChecked = _settings.StopOnPhysicalInput;
+        EasyModeBox.IsChecked = _settings.SimpleMode;
         _hook.Recorded += CaptureEvent;
         _hook.PhysicalInput += () => { if (_player.IsPlaying && StopPhysicalBox.IsChecked == true) Dispatcher.BeginInvoke(StopPlayback); };
         _player.Progress += (loop, total, progress) => Dispatcher.BeginInvoke(() => { StatusText.Text = $"상태: 재생 중 ({loop}/{(total == long.MaxValue ? "∞" : total)})"; DetailText.Text = $"진행률 {progress:P0}"; ElapsedText.Text = progress.ToString("P0"); UpdateControls(); });
@@ -47,7 +48,7 @@ public partial class MainWindow : Window
         _displayTimer.Start();
         _tray = new Forms.NotifyIcon { Icon = System.Drawing.SystemIcons.Application, Visible = true, Text = "MuMiClick - 대기" };
         _tray.DoubleClick += (_, _) => Dispatcher.BeginInvoke(() => { Show(); WindowState = WindowState.Normal; Activate(); });
-        Loaded += (_, _) => { InitializeNative(); RestoreLastMacro(); };
+        Loaded += (_, _) => { InitializeNative(); RestoreLastMacro(); ApplyDisplayMode(); };
     }
     private void InitializeNative()
     {
@@ -76,6 +77,26 @@ public partial class MainWindow : Window
     private void Stop_Click(object sender, RoutedEventArgs e) { StopRecording(); StopPlayback(); }
     private async void Play_Click(object sender, RoutedEventArgs e) => await BeginPlaybackAsync();
     private void Pause_Click(object sender, RoutedEventArgs e) => TogglePause();
+    private void EasyMode_Click(object sender, RoutedEventArgs e)
+    {
+        _settings.SimpleMode = EasyModeBox.IsChecked == true;
+        SaveSettings(_settings);
+        ApplyDisplayMode();
+    }
+    private void ApplyDisplayMode()
+    {
+        var simple = EasyModeBox.IsChecked == true;
+        var advancedVisibility = simple ? Visibility.Collapsed : Visibility.Visible;
+        AdvancedActionsPanel.Visibility = advancedVisibility;
+        AdvancedSettingsPanel.Visibility = advancedVisibility;
+        CoordinatePanel.Visibility = advancedVisibility;
+        AdvancedWorkspace.Visibility = advancedVisibility;
+        AdvancedFooter.Visibility = advancedVisibility;
+        AdvancedRow.Height = new GridLength(simple ? 0 : 1, simple ? GridUnitType.Pixel : GridUnitType.Star);
+        FooterRow.Height = new GridLength(simple ? 0 : 1, simple ? GridUnitType.Pixel : GridUnitType.Auto);
+        if (simple) Height = 340;
+        else if (Height < 620) Height = 720;
+    }
     private async Task BeginRecordingAsync()
     {
         if (_player.IsPlaying) return;
@@ -187,9 +208,9 @@ public partial class MainWindow : Window
             var settings = JsonSerializer.Deserialize<UserSettings>(File.ReadAllText(SettingsPath), JsonOptions()) ?? new();
             // Upgrade prior shipped defaults once; custom settings remain untouched.
             if (settings.RecordHotkey == "Ctrl+Alt+F8" && settings.PlayHotkey == "Ctrl+Alt+F9" && settings.PauseHotkey == "Ctrl+Alt+F10" && settings.StopHotkey == "Ctrl+Alt+F12")
-                settings = new UserSettings { StopOnPhysicalInput = settings.StopOnPhysicalInput };
+                settings = new UserSettings { StopOnPhysicalInput = settings.StopOnPhysicalInput, LastMacroPath = settings.LastMacroPath, SimpleMode = settings.SimpleMode };
             if (settings.RecordHotkey == "F8" && settings.PlayHotkey == "F9" && settings.PauseHotkey == "F10" && settings.StopHotkey == "F12")
-                settings = new UserSettings { StopOnPhysicalInput = settings.StopOnPhysicalInput };
+                settings = new UserSettings { StopOnPhysicalInput = settings.StopOnPhysicalInput, LastMacroPath = settings.LastMacroPath, SimpleMode = settings.SimpleMode };
             return settings;
         }
         catch { return new(); }
