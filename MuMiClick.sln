@@ -1,0 +1,24 @@
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.0.31903.59
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MuMiClick", "src\MuMiClick\MuMiClick.csproj", "{A2E4F68E-5EA1-4CA7-81CD-A8FF3A5C9E63}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MuMiClick.SmokeTests", "tests\MuMiClick.SmokeTests\MuMiClick.SmokeTests.csproj", "{0A79E3E5-3708-42D0-8155-A6572EA11B13}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{A2E4F68E-5EA1-4CA7-81CD-A8FF3A5C9E63}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A2E4F68E-5EA1-4CA7-81CD-A8FF3A5C9E63}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A2E4F68E-5EA1-4CA7-81CD-A8FF3A5C9E63}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A2E4F68E-5EA1-4CA7-81CD-A8FF3A5C9E63}.Release|Any CPU.Build.0 = Release|Any CPU
+		{0A79E3E5-3708-42D0-8155-A6572EA11B13}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{0A79E3E5-3708-42D0-8155-A6572EA11B13}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{0A79E3E5-3708-42D0-8155-A6572EA11B13}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{0A79E3E5-3708-42D0-8155-A6572EA11B13}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+EndGlobal

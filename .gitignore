@@ -1,0 +1,9 @@
+# Build and local release outputs (published separately as GitHub Release assets)
+**/bin/
+**/obj/
+release/
+
+# Visual Studio and user-specific files
+.vs/
+*.user
+*.suo
