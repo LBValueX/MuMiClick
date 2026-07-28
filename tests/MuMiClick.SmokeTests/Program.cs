@@ -3,6 +3,7 @@ using System.Text.Json;
 
 static void Check(bool value, string message) { if (!value) throw new Exception("FAIL: " + message); Console.WriteLine("PASS: " + message); }
 
+Check(new UserSettings().StopOnPhysicalInput, "실제 입력 시 중지 기본 활성화");
 var (mods, key) = HotkeyManager.Parse("F7");
 Check(mods == 0 && key == 0x76, "단일 키 긴급 중지 단축키 파싱");
 var doc = new MacroDocument { CoordinateMode = CoordinateMode.TargetWindow, TargetWindow = new TargetWindowInfo { Title = "테스트", ClassName = "Notepad", ProcessName = "notepad", ProcessId = 42 }, Events = [new MacroEvent { TimeMs = 0, Kind = MacroEventKind.KeyDown, ScanCode = 0x1E }, new MacroEvent { TimeMs = 17, Kind = MacroEventKind.KeyUp, ScanCode = 0x1E }, new MacroEvent { TimeMs = 30, Kind = MacroEventKind.WaitForSaveDialog, TimeoutMs = 15000 }] };

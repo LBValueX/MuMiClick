@@ -51,7 +51,7 @@ public partial class MainWindow : Window
         _displayTimer = new DispatcherTimer { Interval = TimeSpan.FromMilliseconds(100) };
         _displayTimer.Tick += (_, _) => { if (_recording) ElapsedText.Text = _recordWatch.Elapsed.ToString(@"mm\:ss\.f"); };
         _displayTimer.Start();
-        _tray = new Forms.NotifyIcon { Icon = System.Drawing.SystemIcons.Application, Visible = true, Text = "MuMiClick - 대기" };
+        _tray = new Forms.NotifyIcon { Icon = System.Drawing.Icon.ExtractAssociatedIcon(Environment.ProcessPath!) ?? System.Drawing.SystemIcons.Application, Visible = true, Text = "MuMiClick - 대기" };
         _tray.DoubleClick += (_, _) => Dispatcher.BeginInvoke(() => { Show(); WindowState = WindowState.Normal; Activate(); });
         Loaded += (_, _) => { InitializeNative(); RestoreLastMacro(); ApplyDisplayMode(); };
     }
@@ -247,12 +247,24 @@ public partial class MainWindow : Window
     {
         try
         {
-            var settings = JsonSerializer.Deserialize<UserSettings>(File.ReadAllText(SettingsPath), JsonOptions()) ?? new();
+            var json = File.ReadAllText(SettingsPath);
+            using var parsed = JsonDocument.Parse(json);
+            var isLegacySettings = !parsed.RootElement.TryGetProperty(nameof(UserSettings.SettingsVersion), out _);
+            var settings = JsonSerializer.Deserialize<UserSettings>(json, JsonOptions()) ?? new();
+            if (isLegacySettings)
+            {
+                settings.SettingsVersion = 2;
+                settings.StopOnPhysicalInput = true;
+            }
             // Upgrade prior shipped defaults once; custom settings remain untouched.
             if (settings.RecordHotkey == "Ctrl+Alt+F8" && settings.PlayHotkey == "Ctrl+Alt+F9" && settings.PauseHotkey == "Ctrl+Alt+F10" && settings.StopHotkey == "Ctrl+Alt+F12")
-                settings = new UserSettings { StopOnPhysicalInput = settings.StopOnPhysicalInput, LastMacroPath = settings.LastMacroPath, SimpleMode = settings.SimpleMode };
+            {
+                settings.RecordHotkey = "F8"; settings.PlayHotkey = "F9"; settings.PauseHotkey = "F11"; settings.StopHotkey = "F7";
+            }
             if (settings.RecordHotkey == "F8" && settings.PlayHotkey == "F9" && settings.PauseHotkey == "F10" && settings.StopHotkey == "F12")
-                settings = new UserSettings { StopOnPhysicalInput = settings.StopOnPhysicalInput, LastMacroPath = settings.LastMacroPath, SimpleMode = settings.SimpleMode };
+            {
+                settings.PauseHotkey = "F11"; settings.StopHotkey = "F7";
+            }
             return settings;
         }
         catch { return new(); }

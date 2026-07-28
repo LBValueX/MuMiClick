@@ -1,5 +1,7 @@
 # MuMiClick
 
+<img src="src/MuMiClick/Assets/MuMiClick-logo.png" alt="MuMiClick 로고" width="96">
+
 Windows 10/11 x64용 마우스·키보드 매크로 녹화기입니다. ReMouse와 같이 복잡한 스크립트 없이 녹화하고 자연스러운 간격으로 반복 재생하는 데 초점을 맞췄습니다. 모든 데이터는 로컬 JSON 파일이며 네트워크·광고·계정·텔레메트리가 없습니다.
 
 ## 실행 파일
@@ -50,7 +52,7 @@ Windows 10/11 x64용 마우스·키보드 매크로 녹화기입니다. ReMouse�
 - `dwExtraInfo` 마커로 자체 주입 입력을 녹화에서 제외합니다.
 - 마우스 이동은 2px/8ms 기준으로 압축하지만 클릭·휠의 실제 좌표는 보존합니다.
 - 가상 데스크톱 좌표와 `MOUSEEVENTF_VIRTUALDESK`를 사용하므로 음수 좌표 멀티 모니터와 DPI 배율 환경을 지원합니다.
-- `실제 입력 시 재생 중지`를 켜면 사용자의 물리 입력을 감지하여 재생을 취소합니다. 긴급 중지는 재생 대기와 별도 취소 토큰으로 처리됩니다.
+- `실제 입력 시 재생 중지`는 기본으로 켜져 있으며, 사용자의 물리 입력을 감지하면 즉시 재생을 취소합니다. 필요하면 고급 모드에서 끌 수 있습니다. 긴급 중지는 재생 대기와 별도 취소 토큰으로 처리됩니다.
 
 ## 관리자 권한
 
@@ -71,13 +73,13 @@ dotnet publish src\MuMiClick\MuMiClick.csproj -c Release -p:PublishProfile=Porta
 dotnet run --project tests\MuMiClick.SmokeTests\MuMiClick.SmokeTests.csproj -c Release
 ```
 
-검증 항목: 기본 긴급 중지 단축키 파싱, JSON 저장/복원, KeyDown/KeyUp 보존, 타임스탬프 순서.
+검증 항목: 실제 입력 시 중지 기본값, 기본 긴급 중지 단축키 파싱, JSON 저장/복원, KeyDown/KeyUp 보존, 타임스탬프 순서.
 
 ## 테스트 결과
 
-- 2026-07-23: `dotnet build MuMiClick.sln -c Release` 성공 (경고 0, 오류 0).
-- 2026-07-23: 자동 스모크 테스트 3/3 통과.
-- 2026-07-23: self-contained 단일 파일 `MuMiClick.exe` 생성 확인 (약 155MB).
+- 2026-07-28: `dotnet build MuMiClick.sln -c Release` 성공 (경고 0, 오류 0).
+- 2026-07-28: 자동 스모크 테스트 5/5 통과.
+- 2026-07-28: self-contained 단일 파일 `MuMiClick.exe` 생성 및 시작 응답 확인 (약 155MB).
 - 실제 데스크톱 입력을 보내는 수동 시나리오(메모장 100회·멀티 모니터·관리자 창)는 이 환경의 UI 제어 권한이 허가되지 않아 실행하지 못했습니다. 배포 전에는 아래 수동 테스트를 수행하세요.
 
 ## 수동 승인 테스트 목록

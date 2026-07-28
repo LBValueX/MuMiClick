@@ -50,11 +50,12 @@ public sealed class MacroDocument
 
 public sealed class UserSettings
 {
+    public int SettingsVersion { get; set; } = 2;
     public string RecordHotkey { get; set; } = "F8";
     public string PlayHotkey { get; set; } = "F9";
     public string PauseHotkey { get; set; } = "F11";
     public string StopHotkey { get; set; } = "F7";
-    public bool StopOnPhysicalInput { get; set; }
+    public bool StopOnPhysicalInput { get; set; } = true;
     public string? LastMacroPath { get; set; }
     public bool SimpleMode { get; set; }
     public bool StabilizeSaveDialog { get; set; } = true;

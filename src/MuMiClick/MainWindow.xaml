@@ -2,6 +2,7 @@
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         Title="MuMiClick - 마우스·키보드 매크로"
+        Icon="Assets/MuMiClick.ico"
         Width="1120" Height="760" MinWidth="1050" MinHeight="700"
         WindowStartupLocation="CenterScreen" Background="#F3F6FA"
         FontFamily="Segoe UI" FontSize="13" Closing="Window_Closing">
@@ -112,9 +113,14 @@
 
     <Grid Grid.Row="0" Margin="2,0,2,16">
       <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
-      <StackPanel>
-        <TextBlock Text="MuMiClick" FontSize="26" FontWeight="Bold" Foreground="{StaticResource TextBrush}"/>
-        <TextBlock Text="정확하고 빠른 마우스 · 키보드 매크로" Margin="1,3,0,0" Foreground="{StaticResource MutedBrush}"/>
+      <StackPanel Orientation="Horizontal">
+        <Border Width="58" Height="58" CornerRadius="15" Background="White" BorderBrush="{StaticResource LineBrush}" BorderThickness="1" Effect="{StaticResource CardShadow}">
+          <Image Source="Assets/MuMiClick-logo.png" Width="50" Height="50" Stretch="Uniform"/>
+        </Border>
+        <StackPanel Margin="13,0,0,0" VerticalAlignment="Center">
+          <TextBlock Text="MuMiClick" FontSize="26" FontWeight="Bold" Foreground="{StaticResource TextBrush}"/>
+          <TextBlock Text="정확하고 빠른 마우스 · 키보드 매크로" Margin="1,3,0,0" Foreground="{StaticResource MutedBrush}"/>
+        </StackPanel>
       </StackPanel>
       <CheckBox x:Name="EasyModeBox" Grid.Column="1" Style="{StaticResource ModeToggleStyle}" Click="EasyMode_Click" VerticalAlignment="Center"/>
     </Grid>

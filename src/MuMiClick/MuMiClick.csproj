@@ -9,5 +9,10 @@
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
     <ApplicationManifest>app.manifest</ApplicationManifest>
+    <ApplicationIcon>Assets\MuMiClick.ico</ApplicationIcon>
   </PropertyGroup>
+  <ItemGroup>
+    <Resource Include="Assets\MuMiClick-logo.png" />
+    <Resource Include="Assets\MuMiClick.ico" />
+  </ItemGroup>
 </Project>
