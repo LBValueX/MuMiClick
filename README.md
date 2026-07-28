@@ -4,6 +4,8 @@
 
 **English** · [한국어](README.ko.md)
 
+<img width="1030" height="1021" alt="2026-07-28 15 45 34" src="https://github.com/user-attachments/assets/d073cebc-3b1e-4517-b088-bd15e8926a0c" />
+
 MuMiClick is a practical mouse and keyboard macro recorder for Windows 10/11 x64. It is designed for simple recording and reliable playback without scripting, with scan-code keyboard injection, timestamp-based scheduling, and independent emergency-stop handling.
 
 All macro data stays on your computer. MuMiClick has no ads, accounts, login, telemetry, or network data transfer.
