@@ -67,6 +67,7 @@ public sealed class UserSettings
     public string PauseHotkey { get; set; } = "F11";
     public string StopHotkey { get; set; } = "F7";
     public string Language { get; set; } = "auto";
+    public bool DarkMode { get; set; }
     public bool StopOnPhysicalInput { get; set; } = true;
     public string? LastMacroPath { get; set; }
     public bool SimpleMode { get; set; }

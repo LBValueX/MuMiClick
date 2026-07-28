@@ -5,6 +5,7 @@ static void Check(bool value, string message) { if (!value) throw new Exception(
 
 Check(new UserSettings().StopOnPhysicalInput, "실제 입력 시 중지 기본 활성화");
 Check(new UserSettings().Language == "auto", "첫 실행 언어는 OS 자동 감지");
+Check(!new UserSettings().DarkMode, "다크 모드 기본 비활성화");
 Check(LocalizationService.Resolve("ko-KR") == "ko-KR" && LocalizationService.Resolve("en-US") == "en-US", "한국어/영어 언어 선택 해석");
 var (mods, key) = HotkeyManager.Parse("F7");
 Check(mods == 0 && key == 0x76, "단일 키 긴급 중지 단축키 파싱");
@@ -26,6 +27,9 @@ var localizationThread = new Thread(() =>
         Check(LocalizationService.T("SettingsTitle") == "MuMiClick Settings", "영문 UI 리소스 로드");
         var settingsWindow = new SettingsWindow(new UserSettings());
         Check(settingsWindow.Title == "MuMiClick Settings", "설정 팝업 XAML 생성");
+        ThemeService.Apply(settingsWindow, true);
+        var darkBackground = (System.Windows.Media.SolidColorBrush)settingsWindow.Resources["AppBackgroundBrush"];
+        Check(darkBackground.Color == System.Windows.Media.Color.FromRgb(0x11, 0x18, 0x27), "다크 모드 팔레트 적용");
         settingsWindow.Close();
         app.Shutdown();
     }

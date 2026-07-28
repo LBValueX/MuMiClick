@@ -34,6 +34,7 @@ Open **Settings** in the upper-right corner to edit all global hotkeys and the d
 - `Auto (Windows)`: Korean when the Windows display language is Korean; English otherwise
 - `한국어`: always use Korean
 - `English`: always use English
+- **Dark mode**: switches the application surface and title bar to a dark appearance
 
 The default global hotkeys are:
 

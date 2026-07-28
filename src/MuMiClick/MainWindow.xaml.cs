@@ -39,6 +39,7 @@ public partial class MainWindow : Window
         _settings = LoadSettings();
         LocalizationService.Apply(_settings.Language);
         InitializeComponent();
+        ThemeService.Apply(this, _settings.DarkMode);
         EventList.ItemsSource = _eventRows;
         StopPhysicalBox.IsChecked = _settings.StopOnPhysicalInput;
         EasyModeBox.IsChecked = _settings.SimpleMode;
@@ -345,19 +346,20 @@ public partial class MainWindow : Window
         var dialog = new SettingsWindow(_settings) { Owner = this };
         if (dialog.ShowDialog() != true) return;
 
-        var previous = (_settings.RecordHotkey, _settings.PlayHotkey, _settings.PauseHotkey, _settings.StopHotkey, _settings.Language);
+        var previous = (_settings.RecordHotkey, _settings.PlayHotkey, _settings.PauseHotkey, _settings.StopHotkey, _settings.Language, _settings.DarkMode);
         _settings.RecordHotkey = dialog.RecordHotkey;
         _settings.PlayHotkey = dialog.PlayHotkey;
         _settings.PauseHotkey = dialog.PauseHotkey;
         _settings.StopHotkey = dialog.StopHotkey;
         _settings.Language = dialog.SelectedLanguage;
+        _settings.DarkMode = dialog.DarkMode;
         try
         {
             _hotkeys?.Register(_settings);
         }
         catch (Exception ex)
         {
-            (_settings.RecordHotkey, _settings.PlayHotkey, _settings.PauseHotkey, _settings.StopHotkey, _settings.Language) = previous;
+            (_settings.RecordHotkey, _settings.PlayHotkey, _settings.PauseHotkey, _settings.StopHotkey, _settings.Language, _settings.DarkMode) = previous;
             try { _hotkeys?.Register(_settings); } catch { }
             WpfMessageBox.Show(this, ex.Message, LocalizationService.T("HotkeyRegistrationError"), MessageBoxButton.OK, MessageBoxImage.Warning);
             return;
@@ -365,6 +367,7 @@ public partial class MainWindow : Window
 
         _settings.StopOnPhysicalInput = StopPhysicalBox.IsChecked == true;
         LocalizationService.Apply(_settings.Language);
+        ThemeService.Apply(this, _settings.DarkMode);
         RebuildEventRows();
         UpdateTargetText();
         UpdateHotkeyFooter();

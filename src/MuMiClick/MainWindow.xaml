@@ -4,14 +4,30 @@
         Title="{DynamicResource WindowTitle}"
         Icon="Assets/MuMiClick.ico"
         Width="1120" Height="760" MinWidth="1050" MinHeight="700"
-        WindowStartupLocation="CenterScreen" Background="#F3F6FA"
+        WindowStartupLocation="CenterScreen" Background="{DynamicResource AppBackgroundBrush}"
         FontFamily="Segoe UI" FontSize="13" Closing="Window_Closing">
   <Window.Resources>
     <SolidColorBrush x:Key="PrimaryBrush" Color="#2563EB"/>
     <SolidColorBrush x:Key="DangerBrush" Color="#E5484D"/>
+    <SolidColorBrush x:Key="AppBackgroundBrush" Color="#F3F6FA"/>
+    <SolidColorBrush x:Key="SurfaceBrush" Color="#FFFFFF"/>
+    <SolidColorBrush x:Key="SurfaceAltBrush" Color="#F7F9FC"/>
+    <SolidColorBrush x:Key="FieldBrush" Color="#F8FAFC"/>
+    <SolidColorBrush x:Key="ListBrush" Color="#FBFCFE"/>
     <SolidColorBrush x:Key="TextBrush" Color="#172033"/>
     <SolidColorBrush x:Key="MutedBrush" Color="#687386"/>
     <SolidColorBrush x:Key="LineBrush" Color="#E3E8F0"/>
+    <SolidColorBrush x:Key="StatusBarBrush" Color="#172033"/>
+    <SolidColorBrush x:Key="StatusPanelBrush" Color="#263248"/>
+    <SolidColorBrush x:Key="StatusDetailBrush" Color="#B8C2D5"/>
+    <SolidColorBrush x:Key="StatusCountBrush" Color="#D9E1EF"/>
+    <SolidColorBrush x:Key="ModeBackgroundBrush" Color="#E8EEF8"/>
+    <SolidColorBrush x:Key="ModeBorderBrush" Color="#D8E1EF"/>
+    <SolidColorBrush x:Key="ModeTextBrush" Color="#4E5B70"/>
+    <SolidColorBrush x:Key="ModeDotBrush" Color="#8793A5"/>
+    <SolidColorBrush x:Key="DangerSurfaceBrush" Color="#FFF8F8"/>
+    <SolidColorBrush x:Key="DangerBorderBrush" Color="#F1C9CB"/>
+    <SolidColorBrush x:Key="DangerTextBrush" Color="#C8323A"/>
     <SolidColorBrush x:Key="StatusIdleBrush" Color="#FFFFFF"/>
     <SolidColorBrush x:Key="StatusRecordingBrush" Color="#FF8A93"/>
     <SolidColorBrush x:Key="StatusPlayingBrush" Color="#6EE7B7"/>
@@ -23,9 +39,9 @@
       <Setter Property="MinWidth" Value="86"/>
       <Setter Property="Padding" Value="16,0"/>
       <Setter Property="Margin" Value="0,0,8,0"/>
-      <Setter Property="Background" Value="White"/>
-      <Setter Property="Foreground" Value="{StaticResource TextBrush}"/>
-      <Setter Property="BorderBrush" Value="{StaticResource LineBrush}"/>
+      <Setter Property="Background" Value="{DynamicResource SurfaceBrush}"/>
+      <Setter Property="Foreground" Value="{DynamicResource TextBrush}"/>
+      <Setter Property="BorderBrush" Value="{DynamicResource LineBrush}"/>
       <Setter Property="BorderThickness" Value="1"/>
       <Setter Property="FontWeight" Value="SemiBold"/>
       <Setter Property="Cursor" Value="Hand"/>
@@ -55,7 +71,7 @@
       <Setter Property="Background" Value="{StaticResource DangerBrush}"/><Setter Property="Foreground" Value="White"/><Setter Property="BorderThickness" Value="0"/>
     </Style>
     <Style x:Key="StopActionButton" TargetType="Button" BasedOn="{StaticResource ModernButton}">
-      <Setter Property="Foreground" Value="#C8323A"/><Setter Property="BorderBrush" Value="#F1C9CB"/><Setter Property="Background" Value="#FFF8F8"/>
+      <Setter Property="Foreground" Value="{DynamicResource DangerTextBrush}"/><Setter Property="BorderBrush" Value="{DynamicResource DangerBorderBrush}"/><Setter Property="Background" Value="{DynamicResource DangerSurfaceBrush}"/>
     </Style>
     <Style x:Key="CompactButton" TargetType="Button" BasedOn="{StaticResource ModernButton}">
       <Setter Property="Height" Value="36"/><Setter Property="MinWidth" Value="70"/><Setter Property="Padding" Value="12,0"/>
@@ -63,29 +79,29 @@
 
     <Style x:Key="ModernTextBox" TargetType="TextBox">
       <Setter Property="Height" Value="36"/><Setter Property="Padding" Value="10,6"/><Setter Property="Margin" Value="6,0,12,0"/>
-      <Setter Property="Background" Value="#F8FAFC"/><Setter Property="Foreground" Value="{StaticResource TextBrush}"/>
-      <Setter Property="BorderBrush" Value="{StaticResource LineBrush}"/><Setter Property="BorderThickness" Value="1"/>
+      <Setter Property="Background" Value="{DynamicResource FieldBrush}"/><Setter Property="Foreground" Value="{DynamicResource TextBrush}"/>
+      <Setter Property="BorderBrush" Value="{DynamicResource LineBrush}"/><Setter Property="BorderThickness" Value="1"/>
       <Setter Property="VerticalContentAlignment" Value="Center"/>
     </Style>
     <Style TargetType="ComboBox">
       <Setter Property="Height" Value="36"/><Setter Property="Padding" Value="8,4"/><Setter Property="Margin" Value="6,0,12,0"/>
-      <Setter Property="Background" Value="#F8FAFC"/><Setter Property="BorderBrush" Value="{StaticResource LineBrush}"/>
+      <Setter Property="Background" Value="{DynamicResource FieldBrush}"/><Setter Property="BorderBrush" Value="{DynamicResource LineBrush}"/>
     </Style>
     <Style TargetType="CheckBox">
-      <Setter Property="Foreground" Value="{StaticResource TextBrush}"/><Setter Property="VerticalAlignment" Value="Center"/><Setter Property="Margin" Value="8,0,12,0"/>
+      <Setter Property="Foreground" Value="{DynamicResource TextBrush}"/><Setter Property="VerticalAlignment" Value="Center"/><Setter Property="Margin" Value="8,0,12,0"/>
     </Style>
     <Style TargetType="RadioButton">
-      <Setter Property="Foreground" Value="{StaticResource TextBrush}"/><Setter Property="VerticalAlignment" Value="Center"/><Setter Property="Margin" Value="0,0,16,0"/>
+      <Setter Property="Foreground" Value="{DynamicResource TextBrush}"/><Setter Property="VerticalAlignment" Value="Center"/><Setter Property="Margin" Value="0,0,16,0"/>
     </Style>
     <Style x:Key="ModeToggleStyle" TargetType="CheckBox">
       <Setter Property="Cursor" Value="Hand"/><Setter Property="Margin" Value="0"/>
       <Setter Property="Template">
         <Setter.Value>
           <ControlTemplate TargetType="CheckBox">
-            <Border x:Name="ModeBorder" CornerRadius="16" Padding="13,7" Background="#E8EEF8" BorderBrush="#D8E1EF" BorderThickness="1">
+            <Border x:Name="ModeBorder" CornerRadius="16" Padding="13,7" Background="{DynamicResource ModeBackgroundBrush}" BorderBrush="{DynamicResource ModeBorderBrush}" BorderThickness="1">
               <StackPanel Orientation="Horizontal">
-                <Ellipse x:Name="ModeDot" Width="8" Height="8" Margin="0,0,7,0" Fill="#8793A5"/>
-                <TextBlock Text="{DynamicResource EasyMode}" Foreground="#4E5B70" FontWeight="SemiBold"/>
+                <Ellipse x:Name="ModeDot" Width="8" Height="8" Margin="0,0,7,0" Fill="{DynamicResource ModeDotBrush}"/>
+                <TextBlock Text="{DynamicResource EasyMode}" Foreground="{DynamicResource ModeTextBrush}" FontWeight="SemiBold"/>
               </StackPanel>
             </Border>
             <ControlTemplate.Triggers>
@@ -98,7 +114,7 @@
       </Setter>
     </Style>
     <Style x:Key="SectionLabel" TargetType="TextBlock">
-      <Setter Property="Foreground" Value="{StaticResource MutedBrush}"/><Setter Property="FontSize" Value="12"/><Setter Property="FontWeight" Value="SemiBold"/><Setter Property="Margin" Value="0,0,0,5"/>
+      <Setter Property="Foreground" Value="{DynamicResource MutedBrush}"/><Setter Property="FontSize" Value="12"/><Setter Property="FontWeight" Value="SemiBold"/><Setter Property="Margin" Value="0,0,0,5"/>
     </Style>
   </Window.Resources>
 
@@ -114,12 +130,12 @@
     <Grid Grid.Row="0" Margin="2,0,2,16">
       <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
       <StackPanel Orientation="Horizontal">
-        <Border Width="58" Height="58" CornerRadius="15" Background="White" BorderBrush="{StaticResource LineBrush}" BorderThickness="1" Effect="{StaticResource CardShadow}">
+        <Border Width="58" Height="58" CornerRadius="15" Background="{DynamicResource SurfaceBrush}" BorderBrush="{DynamicResource LineBrush}" BorderThickness="1" Effect="{StaticResource CardShadow}">
           <Image Source="Assets/MuMiClick-logo.png" Width="50" Height="50" Stretch="Uniform"/>
         </Border>
         <StackPanel Margin="13,0,0,0" VerticalAlignment="Center">
-          <TextBlock Text="MuMiClick" FontSize="26" FontWeight="Bold" Foreground="{StaticResource TextBrush}"/>
-          <TextBlock Text="{DynamicResource AppSubtitle}" Margin="1,3,0,0" Foreground="{StaticResource MutedBrush}"/>
+          <TextBlock Text="MuMiClick" FontSize="26" FontWeight="Bold" Foreground="{DynamicResource TextBrush}"/>
+          <TextBlock Text="{DynamicResource AppSubtitle}" Margin="1,3,0,0" Foreground="{DynamicResource MutedBrush}"/>
         </StackPanel>
       </StackPanel>
       <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
@@ -128,7 +144,7 @@
       </StackPanel>
     </Grid>
 
-    <Border Grid.Row="1" Background="White" CornerRadius="16" Padding="18" Effect="{StaticResource CardShadow}">
+    <Border Grid.Row="1" Background="{DynamicResource SurfaceBrush}" CornerRadius="16" Padding="18" Effect="{StaticResource CardShadow}">
       <StackPanel>
         <Grid>
           <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
@@ -137,11 +153,11 @@
             <Button x:Name="StopButton" Click="Stop_Click" Style="{StaticResource StopActionButton}" Content="{DynamicResource Stop}"/>
             <Button x:Name="PlayButton" Click="Play_Click" Style="{StaticResource PrimaryButton}" Content="{DynamicResource Play}"/>
           </WrapPanel>
-          <Border Grid.Column="1" Background="#F7F9FC" BorderBrush="{StaticResource LineBrush}" BorderThickness="1" CornerRadius="10" Padding="12,8">
+          <Border Grid.Column="1" Background="{DynamicResource SurfaceAltBrush}" BorderBrush="{DynamicResource LineBrush}" BorderThickness="1" CornerRadius="10" Padding="12,8">
             <WrapPanel x:Name="BasicSettingsPanel" VerticalAlignment="Center">
-              <TextBlock Text="{DynamicResource Repeat}" VerticalAlignment="Center" FontWeight="SemiBold" Foreground="{StaticResource TextBrush}"/>
+              <TextBlock Text="{DynamicResource Repeat}" VerticalAlignment="Center" FontWeight="SemiBold" Foreground="{DynamicResource TextBrush}"/>
               <TextBox x:Name="RepeatBox" Width="58" Text="1" Style="{StaticResource ModernTextBox}" Margin="8,0,8,0" TextAlignment="Center"/>
-              <TextBlock Text="{DynamicResource Times}" VerticalAlignment="Center" Foreground="{StaticResource MutedBrush}"/>
+              <TextBlock Text="{DynamicResource Times}" VerticalAlignment="Center" Foreground="{DynamicResource MutedBrush}"/>
               <CheckBox x:Name="InfiniteBox" Content="{DynamicResource InfiniteRepeat}" Margin="14,0,0,0"/>
             </WrapPanel>
           </Border>
@@ -155,58 +171,58 @@
           <Button Click="Elevate_Click" Style="{StaticResource ModernButton}" Content="{DynamicResource RunAsAdmin}"/>
         </WrapPanel>
 
-        <Border x:Name="AdvancedDivider" Height="1" Background="{StaticResource LineBrush}" Margin="0,16,0,14"/>
+        <Border x:Name="AdvancedDivider" Height="1" Background="{DynamicResource LineBrush}" Margin="0,16,0,14"/>
 
         <StackPanel x:Name="AdvancedSettingsPanel">
           <WrapPanel VerticalAlignment="Center">
-          <TextBlock Text="{DynamicResource Speed}" VerticalAlignment="Center" Foreground="{StaticResource MutedBrush}"/><ComboBox x:Name="SpeedBox" Width="78" SelectedIndex="1"><ComboBoxItem Content="0.5x"/><ComboBoxItem Content="1.0x"/><ComboBoxItem Content="1.5x"/><ComboBoxItem Content="2.0x"/></ComboBox>
-          <TextBlock Text="{DynamicResource RepeatInterval}" VerticalAlignment="Center" Foreground="{StaticResource MutedBrush}"/><TextBox x:Name="IntervalBox" Width="66" Text="0" Style="{StaticResource ModernTextBox}"/><TextBlock Text="ms" VerticalAlignment="Center" Margin="-8,0,10,0" Foreground="{StaticResource MutedBrush}"/>
-          <TextBlock Text="{DynamicResource RecordingCountdown}" VerticalAlignment="Center" Foreground="{StaticResource MutedBrush}"/><TextBox x:Name="CountdownBox" Width="54" Text="0" Style="{StaticResource ModernTextBox}"/><TextBlock Text="{DynamicResource Second}" VerticalAlignment="Center" Margin="-8,0,10,0" Foreground="{StaticResource MutedBrush}"/>
+          <TextBlock Text="{DynamicResource Speed}" VerticalAlignment="Center" Foreground="{DynamicResource MutedBrush}"/><ComboBox x:Name="SpeedBox" Width="78" SelectedIndex="1"><ComboBoxItem Content="0.5x"/><ComboBoxItem Content="1.0x"/><ComboBoxItem Content="1.5x"/><ComboBoxItem Content="2.0x"/></ComboBox>
+          <TextBlock Text="{DynamicResource RepeatInterval}" VerticalAlignment="Center" Foreground="{DynamicResource MutedBrush}"/><TextBox x:Name="IntervalBox" Width="66" Text="0" Style="{StaticResource ModernTextBox}"/><TextBlock Text="ms" VerticalAlignment="Center" Margin="-8,0,10,0" Foreground="{DynamicResource MutedBrush}"/>
+          <TextBlock Text="{DynamicResource RecordingCountdown}" VerticalAlignment="Center" Foreground="{DynamicResource MutedBrush}"/><TextBox x:Name="CountdownBox" Width="54" Text="0" Style="{StaticResource ModernTextBox}"/><TextBlock Text="{DynamicResource Second}" VerticalAlignment="Center" Margin="-8,0,10,0" Foreground="{DynamicResource MutedBrush}"/>
           </WrapPanel>
           <WrapPanel Margin="0,9,0,0" VerticalAlignment="Center">
           <CheckBox x:Name="StopPhysicalBox" Content="{DynamicResource StopOnPhysicalInput}"/>
           <CheckBox x:Name="SaveDialogStabilizationBox" Content="{DynamicResource SaveDialogAutoWait}"/>
-          <TextBlock Text="{DynamicResource Maximum}" VerticalAlignment="Center" Foreground="{StaticResource MutedBrush}"/><TextBox x:Name="SaveDialogTimeoutBox" Width="52" Text="15" Style="{StaticResource ModernTextBox}"/><TextBlock Text="{DynamicResource Second}" VerticalAlignment="Center" Margin="-8,0,10,0" Foreground="{StaticResource MutedBrush}"/>
+          <TextBlock Text="{DynamicResource Maximum}" VerticalAlignment="Center" Foreground="{DynamicResource MutedBrush}"/><TextBox x:Name="SaveDialogTimeoutBox" Width="52" Text="15" Style="{StaticResource ModernTextBox}"/><TextBlock Text="{DynamicResource Second}" VerticalAlignment="Center" Margin="-8,0,10,0" Foreground="{DynamicResource MutedBrush}"/>
           <CheckBox x:Name="InstantMouseBox" Content="{DynamicResource InstantMouseMovement}" ToolTip="{DynamicResource InstantMouseToolTip}"/>
-          <TextBlock Text="{DynamicResource Minimum}" VerticalAlignment="Center" Foreground="{StaticResource MutedBrush}"/><TextBox x:Name="InstantMouseDelayBox" Width="52" Text="30" Style="{StaticResource ModernTextBox}"/><TextBlock Text="ms" VerticalAlignment="Center" Margin="-8,0,0,0" Foreground="{StaticResource MutedBrush}"/>
+          <TextBlock Text="{DynamicResource Minimum}" VerticalAlignment="Center" Foreground="{DynamicResource MutedBrush}"/><TextBox x:Name="InstantMouseDelayBox" Width="52" Text="30" Style="{StaticResource ModernTextBox}"/><TextBlock Text="ms" VerticalAlignment="Center" Margin="-8,0,0,0" Foreground="{DynamicResource MutedBrush}"/>
           </WrapPanel>
         </StackPanel>
 
         <WrapPanel x:Name="CoordinatePanel" Margin="0,13,0,0">
-          <TextBlock Text="{DynamicResource CoordinateReference}" Margin="0,0,14,0" FontWeight="SemiBold" Foreground="{StaticResource TextBrush}" VerticalAlignment="Center"/>
+          <TextBlock Text="{DynamicResource CoordinateReference}" Margin="0,0,14,0" FontWeight="SemiBold" Foreground="{DynamicResource TextBrush}" VerticalAlignment="Center"/>
           <RadioButton x:Name="AbsoluteRadio" IsChecked="True" Content="{DynamicResource AbsoluteScreen}"/>
           <RadioButton x:Name="TargetRadio" Content="{DynamicResource TargetWindowRelative}"/>
-          <TextBlock x:Name="TargetText" Margin="6,0,0,0" Foreground="{StaticResource MutedBrush}" VerticalAlignment="Center" Text="{DynamicResource NoTargetWindow}" TextTrimming="CharacterEllipsis" MaxWidth="360"/>
+          <TextBlock x:Name="TargetText" Margin="6,0,0,0" Foreground="{DynamicResource MutedBrush}" VerticalAlignment="Center" Text="{DynamicResource NoTargetWindow}" TextTrimming="CharacterEllipsis" MaxWidth="360"/>
         </WrapPanel>
       </StackPanel>
     </Border>
 
-    <Border Grid.Row="2" Margin="0,14" Background="#172033" CornerRadius="14" Padding="16,13">
+    <Border Grid.Row="2" Margin="0,14" Background="{DynamicResource StatusBarBrush}" CornerRadius="14" Padding="16,13">
       <Grid>
         <Grid.ColumnDefinitions><ColumnDefinition Width="Auto"/><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
         <Border Width="10" Height="10" CornerRadius="5" Background="#5EE09A" VerticalAlignment="Center" Margin="0,0,11,0"/>
         <StackPanel Grid.Column="1">
           <TextBlock x:Name="StatusText" FontWeight="Bold" Foreground="White" Text="{DynamicResource StatusIdle}"/>
-          <TextBlock x:Name="DetailText" Foreground="#B8C2D5" Margin="0,3,0,0" Text="{DynamicResource PrivacyNotice}" TextTrimming="CharacterEllipsis"/>
+          <TextBlock x:Name="DetailText" Foreground="{DynamicResource StatusDetailBrush}" Margin="0,3,0,0" Text="{DynamicResource PrivacyNotice}" TextTrimming="CharacterEllipsis"/>
         </StackPanel>
         <TextBlock x:Name="ElapsedText" Grid.Column="2" FontSize="22" FontWeight="SemiBold" Foreground="White" VerticalAlignment="Center" Margin="18,0" Text="00:00.0"/>
-        <Border Grid.Column="3" Background="#263248" CornerRadius="10" Padding="12,7" VerticalAlignment="Center"><TextBlock x:Name="EventCountText" Foreground="#D9E1EF"/></Border>
+        <Border Grid.Column="3" Background="{DynamicResource StatusPanelBrush}" CornerRadius="10" Padding="12,7" VerticalAlignment="Center"><TextBlock x:Name="EventCountText" Foreground="{DynamicResource StatusCountBrush}"/></Border>
       </Grid>
     </Border>
 
     <Grid x:Name="AdvancedWorkspace" Grid.Row="3">
-      <Border Background="White" CornerRadius="16" Padding="16" Effect="{StaticResource CardShadow}">
+      <Border Background="{DynamicResource SurfaceBrush}" CornerRadius="16" Padding="16" Effect="{StaticResource CardShadow}">
         <DockPanel>
           <Grid DockPanel.Dock="Top" Margin="2,0,2,12">
             <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
-            <StackPanel><TextBlock Text="{DynamicResource RecordedEvents}" FontSize="16" FontWeight="Bold" Foreground="{StaticResource TextBrush}"/><TextBlock Text="{DynamicResource EventHelp}" Margin="0,3,0,0" Foreground="{StaticResource MutedBrush}" FontSize="12"/></StackPanel>
+            <StackPanel><TextBlock Text="{DynamicResource RecordedEvents}" FontSize="16" FontWeight="Bold" Foreground="{DynamicResource TextBrush}"/><TextBlock Text="{DynamicResource EventHelp}" Margin="0,3,0,0" Foreground="{DynamicResource MutedBrush}" FontSize="12"/></StackPanel>
             <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
               <Button x:Name="ToggleMovesButton" Click="ToggleMouseGroups_Click" Style="{StaticResource CompactButton}" Content="{DynamicResource ExpandMouseMoves}"/>
               <Button Click="InsertSaveWait_Click" Style="{StaticResource CompactButton}" Content="{DynamicResource InsertSaveWait}"/>
               <Button Click="DeleteEvent_Click" Style="{StaticResource CompactButton}" Margin="0" Content="{DynamicResource DeleteSelected}"/>
             </StackPanel>
           </Grid>
-          <ListBox x:Name="EventList" SelectionMode="Extended" KeyDown="EventList_KeyDown" BorderThickness="1" BorderBrush="{StaticResource LineBrush}" Background="#FBFCFE" Padding="6" FontFamily="Consolas">
+          <ListBox x:Name="EventList" SelectionMode="Extended" KeyDown="EventList_KeyDown" BorderThickness="1" BorderBrush="{DynamicResource LineBrush}" Background="{DynamicResource ListBrush}" Foreground="{DynamicResource TextBrush}" Padding="6" FontFamily="Consolas">
             <ListBox.ItemTemplate>
               <DataTemplate>
                 <DockPanel LastChildFill="True">
@@ -224,7 +240,7 @@
 
     <Grid x:Name="AdvancedFooter" Grid.Row="4" Margin="2,12,2,0">
       <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
-      <TextBlock x:Name="HotkeyFooterText" Foreground="{StaticResource MutedBrush}"/>
+      <TextBlock x:Name="HotkeyFooterText" Foreground="{DynamicResource MutedBrush}"/>
       <TextBlock Grid.Column="1" Foreground="#98A2B3" Text="{DynamicResource LocalOnlyFooter}"/>
     </Grid>
   </Grid>

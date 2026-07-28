@@ -50,6 +50,8 @@
   <sys:String x:Key="EmergencyStop">Emergency stop</sys:String>
   <sys:String x:Key="Language">Language</sys:String>
   <sys:String x:Key="LanguageHelp">Auto follows the Windows display language.</sys:String>
+  <sys:String x:Key="DarkMode">Dark mode</sys:String>
+  <sys:String x:Key="DarkModeHelp">Uses a dark background with light text.</sys:String>
   <sys:String x:Key="LanguageAuto">Auto (Windows)</sys:String>
   <sys:String x:Key="Korean">한국어</sys:String>
   <sys:String x:Key="English">English</sys:String>

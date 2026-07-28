@@ -10,10 +10,12 @@ public partial class SettingsWindow : Window
     public string PauseHotkey => PauseHotkeyBox.Text.Trim();
     public string StopHotkey => StopHotkeyBox.Text.Trim();
     public string SelectedLanguage => (LanguageBox.SelectedItem as ComboBoxItem)?.Tag?.ToString() ?? "auto";
+    public bool DarkMode => DarkModeBox.IsChecked == true;
 
     public SettingsWindow(UserSettings settings)
     {
         InitializeComponent();
+        ThemeService.Apply(this, settings.DarkMode);
         RecordHotkeyBox.Text = settings.RecordHotkey;
         PlayHotkeyBox.Text = settings.PlayHotkey;
         PauseHotkeyBox.Text = settings.PauseHotkey;
@@ -21,6 +23,7 @@ public partial class SettingsWindow : Window
         LanguageBox.SelectedItem = LanguageBox.Items.Cast<ComboBoxItem>()
             .FirstOrDefault(x => string.Equals(x.Tag?.ToString(), settings.Language, StringComparison.OrdinalIgnoreCase))
             ?? LanguageBox.Items[0];
+        DarkModeBox.IsChecked = settings.DarkMode;
     }
 
     private void Apply_Click(object sender, RoutedEventArgs e)
