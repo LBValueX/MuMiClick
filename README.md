@@ -73,6 +73,8 @@ Enable **Jump before click** to skip intermediate mouse movement during playback
 - **Absolute screen** replays positions on the Windows virtual desktop and supports multi-monitor negative coordinates.
 - **Relative to target window** finds the selected window again before playback and clicks the same client-area position even after the window moves. Playback is refused when the target cannot be found.
 
+Use **Refresh** in the target-window picker after opening a target application that was not already listed.
+
 ## Input reliability and safety
 
 - Recording uses `WH_MOUSE_LL` and `WH_KEYBOARD_LL`.

@@ -335,11 +335,21 @@ public partial class MainWindow : Window
     }
     private void SelectTarget_Click(object sender, RoutedEventArgs e)
     {
-        var options = WindowLocator.GetWindows(); var list = new System.Windows.Controls.ListBox { ItemsSource = options, DisplayMemberPath = "Item2", Margin = new Thickness(10), MinWidth = 500, MinHeight = 350 };
+        var list = new System.Windows.Controls.ListBox { Margin = new Thickness(10), MinWidth = 500, MinHeight = 350 };
+        var empty = new System.Windows.Controls.TextBlock { Margin = new Thickness(10, 0, 10, 8), Foreground = (System.Windows.Media.Brush)FindResource("MutedBrush"), Text = LocalizationService.T("NoTargetWindows"), TextWrapping = TextWrapping.Wrap };
+        void RefreshWindows()
+        {
+            var options = WindowLocator.GetWindows();
+            list.ItemsSource = options;
+            empty.Visibility = options.Count == 0 ? Visibility.Visible : Visibility.Collapsed;
+        }
+        RefreshWindows();
+        var refresh = new System.Windows.Controls.Button { Content = LocalizationService.T("Refresh"), Margin = new Thickness(5), MinWidth = 80 };
         var ok = new System.Windows.Controls.Button { Content = LocalizationService.T("Select"), IsDefault = true, Margin = new Thickness(5), MinWidth = 80 }; var cancel = new System.Windows.Controls.Button { Content = LocalizationService.T("Cancel"), IsCancel = true, Margin = new Thickness(5), MinWidth = 80 };
-        var panel = new System.Windows.Controls.StackPanel(); panel.Children.Add(list); var actions = new System.Windows.Controls.StackPanel { Orientation = System.Windows.Controls.Orientation.Horizontal, HorizontalAlignment = System.Windows.HorizontalAlignment.Right }; actions.Children.Add(ok); actions.Children.Add(cancel); panel.Children.Add(actions);
+        var panel = new System.Windows.Controls.StackPanel(); panel.Children.Add(list); panel.Children.Add(empty); var actions = new System.Windows.Controls.StackPanel { Orientation = System.Windows.Controls.Orientation.Horizontal, HorizontalAlignment = System.Windows.HorizontalAlignment.Right }; actions.Children.Add(refresh); actions.Children.Add(ok); actions.Children.Add(cancel); panel.Children.Add(actions);
         var dialog = new Window { Owner = this, Title = LocalizationService.T("SelectTarget"), Content = panel, SizeToContent = SizeToContent.WidthAndHeight, WindowStartupLocation = WindowStartupLocation.CenterOwner };
-        ok.Click += (_, _) => dialog.DialogResult = list.SelectedItem is not null; if (dialog.ShowDialog() == true && list.SelectedItem is ValueTuple<IntPtr, TargetWindowInfo> selected) { _target = selected.Item2; UpdateTargetText(); TargetRadio.IsChecked = true; }
+        refresh.Click += (_, _) => RefreshWindows();
+        ok.Click += (_, _) => dialog.DialogResult = list.SelectedItem is not null; if (dialog.ShowDialog() == true && list.SelectedItem is TargetWindowInfo selected) { _target = selected; UpdateTargetText(); TargetRadio.IsChecked = true; }
     }
     private void Settings_Click(object sender, RoutedEventArgs e)
     {

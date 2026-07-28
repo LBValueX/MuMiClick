@@ -100,6 +100,8 @@
   <sys:String x:Key="FileReadErrorFormat">Could not read the file: {0}</sys:String>
   <sys:String x:Key="RecentMacroLoaded">The most recent macro was loaded automatically.</sys:String>
   <sys:String x:Key="Select">Select</sys:String>
+  <sys:String x:Key="Refresh">Refresh</sys:String>
+  <sys:String x:Key="NoTargetWindows">No selectable windows were found. Open the target application, then click Refresh.</sys:String>
   <sys:String x:Key="TargetPrefix">Target window: {0}</sys:String>
   <sys:String x:Key="ElevateFailed">Administrator restart was canceled or failed.</sys:String>
   <sys:String x:Key="HookInstallFailed">Could not install the global input hooks.</sys:String>

@@ -61,18 +61,21 @@ internal static class WindowLocator
         }, IntPtr.Zero);
         return hasEditableControl || childCount >= 8;
     }
-    public static List<(IntPtr Handle, TargetWindowInfo Info)> GetWindows()
+    public static List<TargetWindowInfo> GetWindows()
     {
-        var list = new List<(IntPtr, TargetWindowInfo)>();
-        NativeMethods.EnumWindows((h, _) => { if (TryDescribe(h, out var i)) list.Add((h, i)); return true; }, IntPtr.Zero);
-        return list.OrderBy(x => x.Item2.ProcessName).ThenBy(x => x.Item2.Title).ToList();
+        var list = new List<TargetWindowInfo>();
+        NativeMethods.EnumWindows((h, _) => { if (TryDescribe(h, out var i)) list.Add(i); return true; }, IntPtr.Zero);
+        return list.OrderBy(x => x.ProcessName).ThenBy(x => x.Title).ToList();
     }
     private static bool TryDescribe(IntPtr h, out TargetWindowInfo info)
     {
         info = new(); if (!NativeMethods.IsWindowVisible(h)) return false;
         var title = new StringBuilder(512); NativeMethods.GetWindowText(h, title, title.Capacity); if (title.Length == 0) return false;
         var cls = new StringBuilder(256); NativeMethods.GetClassName(h, cls, cls.Capacity); NativeMethods.GetWindowThreadProcessId(h, out var pid);
-        try { info = new TargetWindowInfo { Title = title.ToString(), ClassName = cls.ToString(), ProcessId = (int)pid, ProcessName = Process.GetProcessById((int)pid).ProcessName }; return true; } catch { return false; }
+        var processName = $"PID {pid}";
+        try { processName = Process.GetProcessById((int)pid).ProcessName; } catch { }
+        info = new TargetWindowInfo { Title = title.ToString(), ClassName = cls.ToString(), ProcessId = (int)pid, ProcessName = processName };
+        return true;
     }
     public static IntPtr Find(TargetWindowInfo wanted)
     {

@@ -100,6 +100,8 @@
   <sys:String x:Key="FileReadErrorFormat">파일을 읽을 수 없습니다: {0}</sys:String>
   <sys:String x:Key="RecentMacroLoaded">최근 매크로를 자동으로 불러왔습니다.</sys:String>
   <sys:String x:Key="Select">선택</sys:String>
+  <sys:String x:Key="Refresh">새로고침</sys:String>
+  <sys:String x:Key="NoTargetWindows">선택할 수 있는 창이 없습니다. 대상 프로그램 창을 연 뒤 새로고침을 누르세요.</sys:String>
   <sys:String x:Key="TargetPrefix">대상 창: {0}</sys:String>
   <sys:String x:Key="ElevateFailed">관리자 재실행이 취소되었거나 실패했습니다.</sys:String>
   <sys:String x:Key="HookInstallFailed">전역 입력 훅을 설치할 수 없습니다.</sys:String>

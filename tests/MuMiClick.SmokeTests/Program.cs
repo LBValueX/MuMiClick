@@ -27,6 +27,13 @@ var localizationThread = new Thread(() =>
         Check(LocalizationService.T("SettingsTitle") == "MuMiClick Settings", "영문 UI 리소스 로드");
         var settingsWindow = new SettingsWindow(new UserSettings());
         Check(settingsWindow.Title == "MuMiClick Settings", "설정 팝업 XAML 생성");
+        var targetList = new System.Windows.Controls.ListBox { ItemsSource = new[] { new TargetWindowInfo { ProcessName = "notepad", Title = "Notes" } } };
+        Check(targetList.Items.Count == 1 && targetList.Items[0] is TargetWindowInfo, "대상 창 목록은 창 정보 객체로 바인딩");
+        var probeTitle = "MuMiClick WindowLocator Smoke Probe";
+        var probe = new System.Windows.Window { Title = probeTitle, Width = 1, Height = 1, Left = -32000, Top = -32000, ShowInTaskbar = false, ShowActivated = false };
+        probe.Show();
+        Check(WindowLocator.GetWindows().Any(x => x.Title == probeTitle), "대상 창 열거는 표시 가능한 창을 찾음");
+        probe.Close();
         ThemeService.Apply(settingsWindow, true);
         var darkBackground = (System.Windows.Media.SolidColorBrush)settingsWindow.Resources["AppBackgroundBrush"];
         Check(darkBackground.Color == System.Windows.Media.Color.FromRgb(0x11, 0x18, 0x27), "다크 모드 팔레트 적용");
