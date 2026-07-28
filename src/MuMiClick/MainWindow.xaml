@@ -22,6 +22,8 @@
           <TextBlock VerticalAlignment="Center" Text="반복 간격(ms):"/><TextBox x:Name="IntervalBox" Width="60" Text="0"/>
           <TextBlock VerticalAlignment="Center" Text="녹화 전:"/><TextBox x:Name="CountdownBox" Width="45" Text="0"/><TextBlock VerticalAlignment="Center" Text="초"/>
           <CheckBox x:Name="StopPhysicalBox" Margin="12,3" Content="실제 입력 시 재생 중지"/>
+          <CheckBox x:Name="SaveDialogStabilizationBox" Margin="12,3" Content="저장 창 자동 대기"/>
+          <TextBlock VerticalAlignment="Center" Text="최대:"/><TextBox x:Name="SaveDialogTimeoutBox" Width="42" Text="15"/><TextBlock VerticalAlignment="Center" Text="초"/>
         </WrapPanel>
         <WrapPanel x:Name="CoordinatePanel" Margin="0,5,0,0"><RadioButton x:Name="AbsoluteRadio" IsChecked="True" Content="화면 절대 좌표" Margin="0,0,16,0"/><RadioButton x:Name="TargetRadio" Content="대상 창 상대 좌표"/><TextBlock x:Name="TargetText" Margin="14,0,0,0" Foreground="#555" VerticalAlignment="Center" Text="대상 창: 선택 안 됨"/></WrapPanel>
       </StackPanel>
@@ -34,7 +36,7 @@
       </Grid>
     </Border>
     <Grid x:Name="AdvancedWorkspace" Grid.Row="2"><Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="270"/></Grid.ColumnDefinitions>
-      <GroupBox Header="녹화된 이벤트 (선택 후 Delete 키 또는 버튼으로 삭제)" Margin="0,0,10,0"><DockPanel><Button DockPanel.Dock="Bottom" HorizontalAlignment="Right" Click="DeleteEvent_Click">선택 삭제</Button><ListBox x:Name="EventList" DisplayMemberPath="Display" KeyDown="EventList_KeyDown"/></DockPanel></GroupBox>
+      <GroupBox Header="녹화된 이벤트 (선택 후 Delete 키 또는 버튼으로 삭제)" Margin="0,0,10,0"><DockPanel><StackPanel DockPanel.Dock="Bottom" Orientation="Horizontal" HorizontalAlignment="Right"><Button Click="InsertSaveWait_Click">저장 창 대기 삽입</Button><Button Click="DeleteEvent_Click">선택 삭제</Button></StackPanel><ListBox x:Name="EventList" DisplayMemberPath="Display" KeyDown="EventList_KeyDown"/></DockPanel></GroupBox>
       <GroupBox Grid.Column="1" Header="전역 단축키 설정"><StackPanel Margin="8"><TextBlock Text="녹화 시작/종료"/><TextBox x:Name="RecordHotkeyBox"/><TextBlock Text="재생 시작"/><TextBox x:Name="PlayHotkeyBox"/><TextBlock Text="일시정지/재개"/><TextBox x:Name="PauseHotkeyBox"/><TextBlock Text="긴급 중지"/><TextBox x:Name="StopHotkeyBox"/><Button Click="ApplyHotkeys_Click" Margin="3,12,3,3">단축키 적용</Button><TextBlock TextWrapping="Wrap" Foreground="#666" Margin="3,8">관리자 권한 프로그램은 동일하거나 더 높은 권한의 MuMiClick에서만 입력을 받을 수 있습니다. 필요하면 ‘관리자 재실행’을 사용하세요.</TextBlock></StackPanel></GroupBox>
     </Grid>
     <TextBlock x:Name="AdvancedFooter" Grid.Row="3" Margin="3,10,3,0" Foreground="#777" Text="기본 단축키: F8 녹화 · F9 재생 · F11 일시정지 · F7 긴급 중지 (F10 미사용)"/>

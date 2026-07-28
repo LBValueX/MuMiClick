@@ -29,6 +29,7 @@ public partial class MainWindow : Window
     private TargetWindowInfo? _target;
     private CancellationTokenSource? _countdownCancel;
     private bool _recording, _countingDown;
+    private bool _saveDialogActiveDuringRecording;
     private Stopwatch _recordWatch = new();
     private const string SettingsFileName = "settings.json";
 
@@ -39,6 +40,8 @@ public partial class MainWindow : Window
         _settings = LoadSettings();
         RecordHotkeyBox.Text = _settings.RecordHotkey; PlayHotkeyBox.Text = _settings.PlayHotkey; PauseHotkeyBox.Text = _settings.PauseHotkey; StopHotkeyBox.Text = _settings.StopHotkey; StopPhysicalBox.IsChecked = _settings.StopOnPhysicalInput;
         EasyModeBox.IsChecked = _settings.SimpleMode;
+        SaveDialogStabilizationBox.IsChecked = _settings.StabilizeSaveDialog;
+        SaveDialogTimeoutBox.Text = Math.Clamp(_settings.SaveDialogTimeoutSeconds, 1, 60).ToString();
         _hook.Recorded += CaptureEvent;
         _hook.PhysicalInput += () => { if (_player.IsPlaying && StopPhysicalBox.IsChecked == true) Dispatcher.BeginInvoke(StopPlayback); };
         _player.Progress += (loop, total, progress) => Dispatcher.BeginInvoke(() => { StatusText.Text = $"상태: 재생 중 ({loop}/{(total == long.MaxValue ? "∞" : total)})"; DetailText.Text = $"진행률 {progress:P0}"; ElapsedText.Text = progress.ToString("P0"); UpdateControls(); });
@@ -107,7 +110,7 @@ public partial class MainWindow : Window
         try { for (var i = seconds; i > 0; i--) { StatusText.Text = $"상태: 녹화 시작까지 {i}초"; DetailText.Text = "카운트다운 중에는 입력을 녹화하지 않습니다."; await Task.Delay(1000, countdown.Token); } }
         catch (OperationCanceledException) { return; }
         finally { if (ReferenceEquals(_countdownCancel, countdown)) { _countingDown = false; _countdownCancel = null; } countdown.Dispose(); }
-        _events.Clear(); _recordWatch.Restart(); _hook.StartRecording(); _recording = true;
+        _events.Clear(); _saveDialogActiveDuringRecording = false; _recordWatch.Restart(); _hook.StartRecording(); _recording = true;
         StatusText.Text = "상태: ● 녹화 중"; StatusText.Foreground = System.Windows.Media.Brushes.Crimson; DetailText.Text = "트레이 아이콘에도 녹화 중 상태가 표시됩니다. F8 또는 정지로 종료"; _tray.Text = "MuMiClick - 녹화 중"; UpdateControls();
     }
     private void StopRecording()
@@ -122,7 +125,15 @@ public partial class MainWindow : Window
             var handle = WindowLocator.Find(_target);
             if (handle != IntPtr.Zero && e.Kind is MacroEventKind.MouseMove or MacroEventKind.MouseDown or MacroEventKind.MouseUp or MacroEventKind.MouseWheel) (e.X, e.Y) = WindowLocator.ToRelative(handle, e.X, e.Y);
         }
-        Dispatcher.BeginInvoke(() => { _events.Add(e); EventCountText.Text = $"이벤트 {_events.Count}개"; });
+        var saveDialogActive = SaveDialogStabilizationBox.IsChecked == true && WindowLocator.IsSaveDialogForeground();
+        MacroEvent? waitEvent = null;
+        if (saveDialogActive && !_saveDialogActiveDuringRecording)
+        {
+            var timeoutSeconds = int.TryParse(SaveDialogTimeoutBox.Text, out var parsed) ? Math.Clamp(parsed, 1, 60) : 15;
+            waitEvent = new MacroEvent { TimeMs = e.TimeMs, Kind = MacroEventKind.WaitForSaveDialog, TimeoutMs = timeoutSeconds * 1000 };
+        }
+        _saveDialogActiveDuringRecording = saveDialogActive;
+        Dispatcher.BeginInvoke(() => { if (waitEvent is not null) _events.Add(waitEvent); _events.Add(e); EventCountText.Text = $"이벤트 {_events.Count}개"; });
     }
     private async Task BeginPlaybackAsync()
     {
@@ -158,6 +169,15 @@ public partial class MainWindow : Window
         PlayButton.IsEnabled = !_recording && !_countingDown && !_player.IsPlaying;
     }
     private void DeleteEvent_Click(object sender, RoutedEventArgs e) { if (EventList.SelectedItem is MacroEvent selected) _events.Remove(selected); EventCountText.Text = $"이벤트 {_events.Count}개"; }
+    private void InsertSaveWait_Click(object sender, RoutedEventArgs e)
+    {
+        var timeoutSeconds = int.TryParse(SaveDialogTimeoutBox.Text, out var parsed) ? Math.Clamp(parsed, 1, 60) : 15;
+        var index = EventList.SelectedIndex >= 0 ? EventList.SelectedIndex : _events.Count;
+        var time = index < _events.Count ? _events[index].TimeMs : (_events.Count == 0 ? 0 : _events[^1].TimeMs);
+        _events.Insert(index, new MacroEvent { TimeMs = time, Kind = MacroEventKind.WaitForSaveDialog, TimeoutMs = timeoutSeconds * 1000 });
+        EventCountText.Text = $"이벤트 {_events.Count}개";
+        EventList.SelectedIndex = index;
+    }
     private void EventList_KeyDown(object sender, System.Windows.Input.KeyEventArgs e) { if (e.Key == Key.Delete) DeleteEvent_Click(sender, e); }
     private void Save_Click(object sender, RoutedEventArgs e)
     {
@@ -224,5 +244,11 @@ public partial class MainWindow : Window
         catch { return new(); }
     }
     private static void SaveSettings(UserSettings settings) { Directory.CreateDirectory(Path.GetDirectoryName(SettingsPath)!); File.WriteAllText(SettingsPath, JsonSerializer.Serialize(settings, JsonOptions())); }
-    private void Window_Closing(object? sender, CancelEventArgs e) { _lifetime.Cancel(); StopRecording(); _player.Stop(); _hotkeys?.Dispose(); _hook.Dispose(); _tray.Visible = false; _tray.Dispose(); }
+    private void Window_Closing(object? sender, CancelEventArgs e)
+    {
+        _settings.StabilizeSaveDialog = SaveDialogStabilizationBox.IsChecked == true;
+        _settings.SaveDialogTimeoutSeconds = int.TryParse(SaveDialogTimeoutBox.Text, out var parsed) ? Math.Clamp(parsed, 1, 60) : 15;
+        SaveSettings(_settings);
+        _lifetime.Cancel(); StopRecording(); _player.Stop(); _hotkeys?.Dispose(); _hook.Dispose(); _tray.Visible = false; _tray.Dispose();
+    }
 }

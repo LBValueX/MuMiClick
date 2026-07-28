@@ -47,16 +47,24 @@ internal sealed class MacroPlayer
     private async Task PlayOnce(IReadOnlyList<MacroEvent> events, IntPtr target, double speed, long loop, long total, long end, CancellationToken ct)
     {
         var sw = Stopwatch.StartNew(); _activeClock = sw;
+        long externalWaitOffset = 0;
         foreach (var e in events)
         {
             ct.ThrowIfCancellationRequested(); await WaitWhilePausedAsync(ct);
-            long due = (long)(e.TimeMs / Math.Max(0.05, speed));
+            long due = (long)(e.TimeMs / Math.Max(0.05, speed)) + externalWaitOffset;
             while (true)
             {
                 long remain = due - sw.ElapsedMilliseconds; if (remain <= 0) break;
                 await Task.Delay((int)Math.Min(remain, 15), ct); await WaitWhilePausedAsync(ct);
             }
-            Send(e, target); Progress?.Invoke(loop, total, Math.Min(1, e.TimeMs / (double)end));
+            if (e.Kind == MacroEventKind.WaitForSaveDialog)
+            {
+                var waitStarted = sw.ElapsedMilliseconds;
+                await WindowLocator.WaitForSaveDialogAsync(e.TimeoutMs <= 0 ? 15000 : e.TimeoutMs, ct);
+                externalWaitOffset += sw.ElapsedMilliseconds - waitStarted;
+            }
+            else Send(e, target);
+            Progress?.Invoke(loop, total, Math.Min(1, e.TimeMs / (double)end));
         }
     }
     public void TogglePause()

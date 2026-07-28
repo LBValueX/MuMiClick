@@ -2,7 +2,7 @@ using System.Text.Json.Serialization;
 
 namespace MuMiClick;
 
-public enum MacroEventKind { MouseMove, MouseDown, MouseUp, MouseWheel, KeyDown, KeyUp }
+public enum MacroEventKind { MouseMove, MouseDown, MouseUp, MouseWheel, KeyDown, KeyUp, WaitForSaveDialog }
 public enum MouseButtonKind { Left, Right, Middle, X1, X2 }
 public enum CoordinateMode { AbsoluteScreen, TargetWindow }
 
@@ -17,12 +17,14 @@ public sealed class MacroEvent
     public uint VirtualKey { get; set; }
     public uint ScanCode { get; set; }
     public bool Extended { get; set; }
+    public int TimeoutMs { get; set; }
     [JsonIgnore] public string Display => $"{TimeMs,7} ms  {Kind,-10} {Describe()}";
     private string Describe() => Kind switch
     {
         MacroEventKind.MouseMove => $"({X}, {Y})",
         MacroEventKind.MouseDown or MacroEventKind.MouseUp => $"{Button} ({X}, {Y})",
         MacroEventKind.MouseWheel => $"{Delta} ({X}, {Y})",
+        MacroEventKind.WaitForSaveDialog => $"최대 {Math.Max(1, TimeoutMs / 1000)}초",
         _ => $"VK {VirtualKey} / Scan {ScanCode}" + (Extended ? " (확장)" : "")
     };
 }
@@ -55,4 +57,6 @@ public sealed class UserSettings
     public bool StopOnPhysicalInput { get; set; }
     public string? LastMacroPath { get; set; }
     public bool SimpleMode { get; set; }
+    public bool StabilizeSaveDialog { get; set; } = true;
+    public int SaveDialogTimeoutSeconds { get; set; } = 15;
 }

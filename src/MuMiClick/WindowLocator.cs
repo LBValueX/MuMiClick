@@ -5,6 +5,62 @@ namespace MuMiClick;
 
 internal static class WindowLocator
 {
+    public static bool IsSaveDialogForeground() => IsSaveDialog(NativeMethods.GetForegroundWindow());
+    public static async Task<IntPtr> WaitForSaveDialogAsync(int timeoutMs, CancellationToken ct)
+    {
+        var clock = Stopwatch.StartNew();
+        IntPtr candidate = IntPtr.Zero;
+        long stableSince = 0;
+        while (clock.ElapsedMilliseconds < Math.Max(1000, timeoutMs))
+        {
+            ct.ThrowIfCancellationRequested();
+            var found = FindSaveDialog();
+            if (found != IntPtr.Zero && NativeMethods.IsWindowEnabled(found) && IsDialogReady(found))
+            {
+                if (found != candidate) { candidate = found; stableSince = clock.ElapsedMilliseconds; }
+                else if (clock.ElapsedMilliseconds - stableSince >= 250)
+                {
+                    NativeMethods.SetForegroundWindow(found);
+                    await Task.Delay(100, ct);
+                    return found;
+                }
+            }
+            else { candidate = IntPtr.Zero; stableSince = 0; }
+            await Task.Delay(50, ct);
+        }
+        throw new TimeoutException($"다른 이름으로 저장 창이 {Math.Max(1, timeoutMs / 1000)}초 안에 나타나지 않았습니다.");
+    }
+    private static IntPtr FindSaveDialog()
+    {
+        var foreground = NativeMethods.GetForegroundWindow();
+        if (IsSaveDialog(foreground)) return foreground;
+        IntPtr result = IntPtr.Zero;
+        NativeMethods.EnumWindows((h, _) => { if (IsSaveDialog(h)) { result = h; return false; } return true; }, IntPtr.Zero);
+        return result;
+    }
+    private static bool IsSaveDialog(IntPtr h)
+    {
+        if (h == IntPtr.Zero || !NativeMethods.IsWindowVisible(h)) return false;
+        var cls = new StringBuilder(128); NativeMethods.GetClassName(h, cls, cls.Capacity);
+        if (cls.ToString() != "#32770") return false;
+        var title = new StringBuilder(512); NativeMethods.GetWindowText(h, title, title.Capacity);
+        var text = title.ToString();
+        return text.Contains("저장", StringComparison.OrdinalIgnoreCase) || text.Contains("Save As", StringComparison.OrdinalIgnoreCase) || text.Contains("Save Image", StringComparison.OrdinalIgnoreCase);
+    }
+    private static bool IsDialogReady(IntPtr dialog)
+    {
+        var childCount = 0;
+        var hasEditableControl = false;
+        NativeMethods.EnumChildWindows(dialog, (child, _) =>
+        {
+            if (!NativeMethods.IsWindowVisible(child) || !NativeMethods.IsWindowEnabled(child)) return true;
+            childCount++;
+            var cls = new StringBuilder(64); NativeMethods.GetClassName(child, cls, cls.Capacity);
+            if (NativeMethods.GetDlgCtrlID(child) == 0x47C || cls.ToString().Equals("Edit", StringComparison.OrdinalIgnoreCase)) hasEditableControl = true;
+            return true;
+        }, IntPtr.Zero);
+        return hasEditableControl || childCount >= 8;
+    }
     public static List<(IntPtr Handle, TargetWindowInfo Info)> GetWindows()
     {
         var list = new List<(IntPtr, TargetWindowInfo)>();

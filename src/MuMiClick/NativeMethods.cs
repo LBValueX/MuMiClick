@@ -34,7 +34,11 @@ internal static class NativeMethods
     [DllImport("user32.dll")] internal static extern bool GetClientRect(IntPtr hWnd, out RECT rect);
     [DllImport("user32.dll")] internal static extern bool IsWindow(IntPtr hWnd);
     [DllImport("user32.dll")] internal static extern bool IsWindowVisible(IntPtr hWnd);
+    [DllImport("user32.dll")] internal static extern bool IsWindowEnabled(IntPtr hWnd);
+    [DllImport("user32.dll")] internal static extern IntPtr GetForegroundWindow();
     [DllImport("user32.dll")] internal static extern bool EnumWindows(EnumWindowsProc proc, IntPtr param);
+    [DllImport("user32.dll")] internal static extern bool EnumChildWindows(IntPtr hWnd, EnumWindowsProc proc, IntPtr param);
+    [DllImport("user32.dll")] internal static extern int GetDlgCtrlID(IntPtr hWnd);
     internal delegate bool EnumWindowsProc(IntPtr hWnd, IntPtr lParam);
     [DllImport("user32.dll", CharSet = CharSet.Unicode)] internal static extern int GetWindowText(IntPtr hWnd, StringBuilder text, int maxCount);
     [DllImport("user32.dll", CharSet = CharSet.Unicode)] internal static extern int GetClassName(IntPtr hWnd, StringBuilder text, int maxCount);
