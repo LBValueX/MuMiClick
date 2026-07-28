@@ -42,6 +42,8 @@ public partial class MainWindow : Window
         EasyModeBox.IsChecked = _settings.SimpleMode;
         SaveDialogStabilizationBox.IsChecked = _settings.StabilizeSaveDialog;
         SaveDialogTimeoutBox.Text = Math.Clamp(_settings.SaveDialogTimeoutSeconds, 1, 60).ToString();
+        InstantMouseBox.IsChecked = _settings.InstantMouseMovement;
+        InstantMouseDelayBox.Text = Math.Clamp(_settings.InstantMouseDelayMs, 0, 500).ToString();
         _hook.Recorded += CaptureEvent;
         _hook.PhysicalInput += () => { if (_player.IsPlaying && StopPhysicalBox.IsChecked == true) Dispatcher.BeginInvoke(StopPlayback); };
         _player.Progress += (loop, total, progress) => Dispatcher.BeginInvoke(() => { StatusText.Text = $"상태: 재생 중 ({loop}/{(total == long.MaxValue ? "∞" : total)})"; DetailText.Text = $"진행률 {progress:P0}"; ElapsedText.Text = progress.ToString("P0"); UpdateControls(); });
@@ -146,7 +148,8 @@ public partial class MainWindow : Window
         var speed = double.Parse(((System.Windows.Controls.ComboBoxItem)SpeedBox.SelectedItem).Content!.ToString()![..^1], System.Globalization.CultureInfo.InvariantCulture);
         var doc = new MacroDocument { Events = _events.ToList(), CoordinateMode = TargetRadio.IsChecked == true ? CoordinateMode.TargetWindow : CoordinateMode.AbsoluteScreen, TargetWindow = _target };
         StatusText.Foreground = System.Windows.Media.Brushes.DarkGreen; StatusText.Text = "상태: 재생 준비"; _tray.Text = "MuMiClick - 재생 중"; UpdateControls();
-        await _player.PlayAsync(doc, repeat, infinite, speed, interval, _lifetime.Token);
+        var instantMouseDelay = int.TryParse(InstantMouseDelayBox.Text, out var parsedMouseDelay) ? Math.Clamp(parsedMouseDelay, 0, 500) : 30;
+        await _player.PlayAsync(doc, repeat, infinite, speed, interval, InstantMouseBox.IsChecked == true, instantMouseDelay, _lifetime.Token);
     }
     private void TogglePause()
     {
@@ -248,6 +251,8 @@ public partial class MainWindow : Window
     {
         _settings.StabilizeSaveDialog = SaveDialogStabilizationBox.IsChecked == true;
         _settings.SaveDialogTimeoutSeconds = int.TryParse(SaveDialogTimeoutBox.Text, out var parsed) ? Math.Clamp(parsed, 1, 60) : 15;
+        _settings.InstantMouseMovement = InstantMouseBox.IsChecked == true;
+        _settings.InstantMouseDelayMs = int.TryParse(InstantMouseDelayBox.Text, out var parsedMouseDelay) ? Math.Clamp(parsedMouseDelay, 0, 500) : 30;
         SaveSettings(_settings);
         _lifetime.Cancel(); StopRecording(); _player.Stop(); _hotkeys?.Dispose(); _hook.Dispose(); _tray.Visible = false; _tray.Dispose();
     }

@@ -24,6 +24,8 @@
           <CheckBox x:Name="StopPhysicalBox" Margin="12,3" Content="실제 입력 시 재생 중지"/>
           <CheckBox x:Name="SaveDialogStabilizationBox" Margin="12,3" Content="저장 창 자동 대기"/>
           <TextBlock VerticalAlignment="Center" Text="최대:"/><TextBox x:Name="SaveDialogTimeoutBox" Width="42" Text="15"/><TextBlock VerticalAlignment="Center" Text="초"/>
+          <CheckBox x:Name="InstantMouseBox" Margin="12,3" Content="클릭 직전 순간 이동" ToolTip="중간 마우스 이동을 생략하고 클릭·휠·드래그 직전 좌표로 바로 이동합니다."/>
+          <TextBlock VerticalAlignment="Center" Text="최소 이동:"/><TextBox x:Name="InstantMouseDelayBox" Width="42" Text="30"/><TextBlock VerticalAlignment="Center" Text="ms"/>
         </WrapPanel>
         <WrapPanel x:Name="CoordinatePanel" Margin="0,5,0,0"><RadioButton x:Name="AbsoluteRadio" IsChecked="True" Content="화면 절대 좌표" Margin="0,0,16,0"/><RadioButton x:Name="TargetRadio" Content="대상 창 상대 좌표"/><TextBlock x:Name="TargetText" Margin="14,0,0,0" Foreground="#555" VerticalAlignment="Center" Text="대상 창: 선택 안 됨"/></WrapPanel>
       </StackPanel>

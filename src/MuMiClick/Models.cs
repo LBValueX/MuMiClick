@@ -59,4 +59,6 @@ public sealed class UserSettings
     public bool SimpleMode { get; set; }
     public bool StabilizeSaveDialog { get; set; } = true;
     public int SaveDialogTimeoutSeconds { get; set; } = 15;
+    public bool InstantMouseMovement { get; set; }
+    public int InstantMouseDelayMs { get; set; } = 30;
 }

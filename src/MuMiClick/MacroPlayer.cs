@@ -16,7 +16,7 @@ internal sealed class MacroPlayer
     public event Action<long, long, double>? Progress;
     public event Action<string>? Completed;
 
-    public async Task PlayAsync(MacroDocument doc, int repeat, bool infinite, double speed, int intervalMs, CancellationToken appToken)
+    public async Task PlayAsync(MacroDocument doc, int repeat, bool infinite, double speed, int intervalMs, bool instantMouseMovement, int instantMouseDelayMs, CancellationToken appToken)
     {
         if (doc.Events.Count == 0) throw new InvalidOperationException("재생할 녹화 이벤트가 없습니다.");
         if (IsPlaying) return;
@@ -34,7 +34,7 @@ internal sealed class MacroPlayer
             var end = Math.Max(1, doc.Events[^1].TimeMs);
             for (long loop = 1; infinite || loop <= count; loop++)
             {
-                await PlayOnce(doc.Events, target, speed, loop, infinite ? long.MaxValue : count, end, ct);
+                await PlayOnce(doc.Events, target, speed, loop, infinite ? long.MaxValue : count, end, instantMouseMovement, Math.Clamp(instantMouseDelayMs, 0, 500), ct);
                 if ((infinite || loop < count) && intervalMs > 0) await DelayWithPauseAsync(intervalMs, ct);
                 if (infinite && loop == long.MaxValue) loop = 0;
             }
@@ -44,14 +44,27 @@ internal sealed class MacroPlayer
         catch (Exception ex) { Completed?.Invoke("재생 오류: " + ex.Message); }
         finally { ReleaseAll(); ResumeWaiters(); _activeClock = null; _cancel?.Dispose(); _cancel = null; }
     }
-    private async Task PlayOnce(IReadOnlyList<MacroEvent> events, IntPtr target, double speed, long loop, long total, long end, CancellationToken ct)
+    private async Task PlayOnce(IReadOnlyList<MacroEvent> events, IntPtr target, double speed, long loop, long total, long end, bool instantMouseMovement, int instantMouseDelayMs, CancellationToken ct)
     {
         var sw = Stopwatch.StartNew(); _activeClock = sw;
         long externalWaitOffset = 0;
+        long compressedPlaybackMs = 0;
+        long skippedMovementStartedAt = -1;
         foreach (var e in events)
         {
             ct.ThrowIfCancellationRequested(); await WaitWhilePausedAsync(ct);
-            long due = (long)(e.TimeMs / Math.Max(0.05, speed)) + externalWaitOffset;
+            if (instantMouseMovement && e.Kind == MacroEventKind.MouseMove)
+            {
+                if (skippedMovementStartedAt < 0) skippedMovementStartedAt = e.TimeMs;
+                continue;
+            }
+            if (instantMouseMovement && skippedMovementStartedAt >= 0)
+            {
+                var recordedMovementPlaybackMs = (long)(Math.Max(0, e.TimeMs - skippedMovementStartedAt) / Math.Max(0.05, speed));
+                compressedPlaybackMs += Math.Max(0, recordedMovementPlaybackMs - instantMouseDelayMs);
+                skippedMovementStartedAt = -1;
+            }
+            long due = (long)(e.TimeMs / Math.Max(0.05, speed)) - compressedPlaybackMs + externalWaitOffset;
             while (true)
             {
                 long remain = due - sw.ElapsedMilliseconds; if (remain <= 0) break;
