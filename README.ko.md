@@ -112,3 +112,7 @@ dotnet run --project tests\MuMiClick.SmokeTests\MuMiClick.SmokeTests.csproj -c R
 ## 개인정보
 
 녹화는 사용자가 버튼이나 단축키로 명시적으로 시작한 경우에만 수행됩니다. 데이터는 로컬에 저장되며 로그에는 실제 입력 문자열을 남기지 않습니다.
+
+## 라이선스
+
+[MuMiClick Community License](LICENSE)를 적용합니다. 사용, 복제, 수정, 재배포는 가능하지만 수정·재배포한 버전을 공식 MuMiClick 프로젝트인 것처럼 소개하거나, 혼동을 유발하는 방식으로 MuMiClick 이름·로고·브랜딩을 사용하면 안 됩니다. 불법적·기만적·개인정보 침해·유해·악의적 사용은 금지됩니다.

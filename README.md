@@ -112,3 +112,7 @@ The smoke suite covers safe defaults, language selection, single-key hotkey pars
 ## Privacy
 
 Recording begins only after an explicit button or hotkey action. Macro data is stored locally, and logs never contain typed strings.
+
+## License
+
+Released under the [MuMiClick Community License](LICENSE). You may use, copy, modify, and redistribute the project, but modified versions must not pretend to be the official MuMiClick project or use its name and branding in a confusing way. Unlawful, deceptive, privacy-invasive, harmful, or malicious use is prohibited.
