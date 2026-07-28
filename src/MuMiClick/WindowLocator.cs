@@ -28,7 +28,7 @@ internal static class WindowLocator
             else { candidate = IntPtr.Zero; stableSince = 0; }
             await Task.Delay(50, ct);
         }
-        throw new TimeoutException($"다른 이름으로 저장 창이 {Math.Max(1, timeoutMs / 1000)}초 안에 나타나지 않았습니다.");
+        throw new TimeoutException(LocalizationService.F("SaveDialogTimeoutFormat", Math.Max(1, timeoutMs / 1000)));
     }
     private static IntPtr FindSaveDialog()
     {

@@ -19,6 +19,7 @@ namespace MuMiClick;
 public partial class MainWindow : Window
 {
     private readonly ObservableCollection<MacroEvent> _events = [];
+    private readonly ObservableCollection<EventListItem> _eventRows = [];
     private readonly InputHook _hook = new();
     private readonly MacroPlayer _player = new();
     private readonly DispatcherTimer _displayTimer;
@@ -35,10 +36,11 @@ public partial class MainWindow : Window
 
     public MainWindow()
     {
-        InitializeComponent();
-        EventList.ItemsSource = _events;
         _settings = LoadSettings();
-        RecordHotkeyBox.Text = _settings.RecordHotkey; PlayHotkeyBox.Text = _settings.PlayHotkey; PauseHotkeyBox.Text = _settings.PauseHotkey; StopHotkeyBox.Text = _settings.StopHotkey; StopPhysicalBox.IsChecked = _settings.StopOnPhysicalInput;
+        LocalizationService.Apply(_settings.Language);
+        InitializeComponent();
+        EventList.ItemsSource = _eventRows;
+        StopPhysicalBox.IsChecked = _settings.StopOnPhysicalInput;
         EasyModeBox.IsChecked = _settings.SimpleMode;
         SaveDialogStabilizationBox.IsChecked = _settings.StabilizeSaveDialog;
         SaveDialogTimeoutBox.Text = Math.Clamp(_settings.SaveDialogTimeoutSeconds, 1, 60).ToString();
@@ -46,14 +48,17 @@ public partial class MainWindow : Window
         InstantMouseDelayBox.Text = Math.Clamp(_settings.InstantMouseDelayMs, 0, 500).ToString();
         _hook.Recorded += CaptureEvent;
         _hook.PhysicalInput += () => { if (_player.IsPlaying && StopPhysicalBox.IsChecked == true) Dispatcher.BeginInvoke(StopPlayback); };
-        _player.Progress += (loop, total, progress) => Dispatcher.BeginInvoke(() => { StatusText.Text = $"상태: 재생 중 ({loop}/{(total == long.MaxValue ? "∞" : total)})"; DetailText.Text = $"진행률 {progress:P0}"; ElapsedText.Text = progress.ToString("P0"); UpdateControls(); });
+        _player.Progress += (loop, total, progress) => Dispatcher.BeginInvoke(() => { StatusText.Text = LocalizationService.F("PlaybackStatusFormat", loop, total == long.MaxValue ? "∞" : total); DetailText.Text = LocalizationService.F("ProgressFormat", progress); ElapsedText.Text = progress.ToString("P0"); UpdateControls(); });
         _player.Completed += text => Dispatcher.BeginInvoke(() => { SetIdle(text); UpdateControls(); });
         _displayTimer = new DispatcherTimer { Interval = TimeSpan.FromMilliseconds(100) };
         _displayTimer.Tick += (_, _) => { if (_recording) ElapsedText.Text = _recordWatch.Elapsed.ToString(@"mm\:ss\.f"); };
         _displayTimer.Start();
-        _tray = new Forms.NotifyIcon { Icon = System.Drawing.Icon.ExtractAssociatedIcon(Environment.ProcessPath!) ?? System.Drawing.SystemIcons.Application, Visible = true, Text = "MuMiClick - 대기" };
+        _tray = new Forms.NotifyIcon { Icon = System.Drawing.Icon.ExtractAssociatedIcon(Environment.ProcessPath!) ?? System.Drawing.SystemIcons.Application, Visible = true, Text = LocalizationService.T("TrayIdle") };
         _tray.DoubleClick += (_, _) => Dispatcher.BeginInvoke(() => { Show(); WindowState = WindowState.Normal; Activate(); });
         Loaded += (_, _) => { InitializeNative(); RestoreLastMacro(); ApplyDisplayMode(); };
+        UpdateEventCount();
+        UpdateHotkeyFooter();
+        UpdateMouseGroupButton();
     }
     private void InitializeNative()
     {
@@ -117,19 +122,19 @@ public partial class MainWindow : Window
     {
         if (_player.IsPlaying) return;
         if (_recording || _countingDown) return;
-        if (TargetRadio.IsChecked == true && _target is null) { WpfMessageBox.Show("창 상대 좌표 모드에서는 대상 창을 선택해야 합니다."); return; }
+        if (TargetRadio.IsChecked == true && _target is null) { WpfMessageBox.Show(LocalizationService.T("TargetRequired")); return; }
         _countingDown = true; _countdownCancel?.Dispose(); var countdown = _countdownCancel = CancellationTokenSource.CreateLinkedTokenSource(_lifetime.Token);
         if (!int.TryParse(CountdownBox.Text, out var seconds) || seconds < 0) seconds = 0;
-        try { for (var i = seconds; i > 0; i--) { StatusText.Text = $"상태: 녹화 시작까지 {i}초"; DetailText.Text = "카운트다운 중에는 입력을 녹화하지 않습니다."; await Task.Delay(1000, countdown.Token); } }
+        try { for (var i = seconds; i > 0; i--) { StatusText.Text = LocalizationService.F("CountdownStatusFormat", i); DetailText.Text = LocalizationService.T("CountdownHelp"); await Task.Delay(1000, countdown.Token); } }
         catch (OperationCanceledException) { return; }
         finally { if (ReferenceEquals(_countdownCancel, countdown)) { _countingDown = false; _countdownCancel = null; } countdown.Dispose(); }
-        _events.Clear(); _saveDialogActiveDuringRecording = false; _recordWatch.Restart(); _hook.StartRecording(); _recording = true;
-        StatusText.Text = "상태: ● 녹화 중"; StatusText.Foreground = (System.Windows.Media.Brush)FindResource("StatusRecordingBrush"); DetailText.Text = "트레이 아이콘에도 녹화 중 상태가 표시됩니다. F8 또는 정지로 종료"; _tray.Text = "MuMiClick - 녹화 중"; UpdateControls();
+        _events.Clear(); _eventRows.Clear(); UpdateEventCount(); UpdateMouseGroupButton(); _saveDialogActiveDuringRecording = false; _recordWatch.Restart(); _hook.StartRecording(); _recording = true;
+        StatusText.Text = LocalizationService.T("RecordingStatus"); StatusText.Foreground = (System.Windows.Media.Brush)FindResource("StatusRecordingBrush"); DetailText.Text = LocalizationService.T("RecordingHelp"); _tray.Text = LocalizationService.T("TrayRecording"); UpdateControls();
     }
     private void StopRecording()
     {
         if (!_recording && !_countingDown) return;
-        _countdownCancel?.Cancel(); _countingDown = false; _hook.StopRecording(); _recordWatch.Stop(); _recording = false; SetIdle("녹화가 종료되었습니다."); UpdateControls();
+        _countdownCancel?.Cancel(); _countingDown = false; _hook.StopRecording(); _recordWatch.Stop(); _recording = false; SetIdle(LocalizationService.T("RecordingFinished")); UpdateControls();
     }
     private void CaptureEvent(MacroEvent e)
     {
@@ -146,19 +151,19 @@ public partial class MainWindow : Window
             waitEvent = new MacroEvent { TimeMs = e.TimeMs, Kind = MacroEventKind.WaitForSaveDialog, TimeoutMs = timeoutSeconds * 1000 };
         }
         _saveDialogActiveDuringRecording = saveDialogActive;
-        Dispatcher.BeginInvoke(() => { if (waitEvent is not null) _events.Add(waitEvent); _events.Add(e); EventCountText.Text = $"이벤트 {_events.Count}개"; });
+        Dispatcher.BeginInvoke(() => { if (waitEvent is not null) AddEvent(waitEvent); AddEvent(e); });
     }
     private async Task BeginPlaybackAsync()
     {
-        if (_recording || _countingDown) { WpfMessageBox.Show("녹화를 먼저 끝내세요."); return; }
+        if (_recording || _countingDown) { WpfMessageBox.Show(LocalizationService.T("EndRecordingFirst")); return; }
         if (_player.IsPlaying) return;
         var infinite = InfiniteBox.IsChecked == true;
         var repeat = 1;
-        if (!infinite && (!int.TryParse(RepeatBox.Text, out repeat) || repeat < 1 || repeat > 1000000)) { WpfMessageBox.Show("반복 횟수는 1~1,000,000 사이여야 합니다."); return; }
-        if (!int.TryParse(IntervalBox.Text, out var interval) || interval < 0) { WpfMessageBox.Show("반복 간격은 0 이상의 밀리초입니다."); return; }
+        if (!infinite && (!int.TryParse(RepeatBox.Text, out repeat) || repeat < 1 || repeat > 1000000)) { WpfMessageBox.Show(LocalizationService.T("RepeatRange")); return; }
+        if (!int.TryParse(IntervalBox.Text, out var interval) || interval < 0) { WpfMessageBox.Show(LocalizationService.T("IntervalInvalid")); return; }
         var speed = double.Parse(((System.Windows.Controls.ComboBoxItem)SpeedBox.SelectedItem).Content!.ToString()![..^1], System.Globalization.CultureInfo.InvariantCulture);
         var doc = new MacroDocument { Events = _events.ToList(), CoordinateMode = TargetRadio.IsChecked == true ? CoordinateMode.TargetWindow : CoordinateMode.AbsoluteScreen, TargetWindow = _target };
-        StatusText.Foreground = (System.Windows.Media.Brush)FindResource("StatusPlayingBrush"); StatusText.Text = "상태: 재생 준비"; _tray.Text = "MuMiClick - 재생 중"; UpdateControls();
+        StatusText.Foreground = (System.Windows.Media.Brush)FindResource("StatusPlayingBrush"); StatusText.Text = LocalizationService.T("PlaybackReady"); _tray.Text = LocalizationService.T("TrayPlaying"); UpdateControls();
         var instantMouseDelay = int.TryParse(InstantMouseDelayBox.Text, out var parsedMouseDelay) ? Math.Clamp(parsedMouseDelay, 0, 500) : 30;
         await _player.PlayAsync(doc, repeat, infinite, speed, interval, InstantMouseBox.IsChecked == true, instantMouseDelay, _lifetime.Token);
     }
@@ -167,14 +172,14 @@ public partial class MainWindow : Window
         _player.TogglePause();
         if (_player.IsPlaying)
         {
-            DetailText.Text = _player.IsPaused ? "일시정지됨 — F11을 누르면 재개합니다." : "재생을 재개했습니다.";
-            StatusText.Text = _player.IsPaused ? "상태: 일시정지" : "상태: 재생 중";
+            DetailText.Text = LocalizationService.T(_player.IsPaused ? "PausedHelp" : "ResumedHelp");
+            StatusText.Text = LocalizationService.T(_player.IsPaused ? "StatusPaused" : "StatusPlaying");
         }
     }
     private void StopPlayback() { if (_player.IsPlaying) _player.Stop(); else _player.ReleaseAll(); }
     private void SetIdle(string message)
     {
-        StatusText.Text = "상태: 대기"; StatusText.Foreground = (System.Windows.Media.Brush)FindResource("StatusIdleBrush"); DetailText.Text = message; _tray.Text = "MuMiClick - 대기"; if (!_recording) ElapsedText.Text = "00:00.0";
+        StatusText.Text = LocalizationService.T("StatusIdle"); StatusText.Foreground = (System.Windows.Media.Brush)FindResource("StatusIdleBrush"); DetailText.Text = message; _tray.Text = LocalizationService.T("TrayIdle"); if (!_recording) ElapsedText.Text = "00:00.0";
     }
     private void UpdateControls()
     {
@@ -182,29 +187,132 @@ public partial class MainWindow : Window
         RecordButton.IsEnabled = !_player.IsPlaying;
         PlayButton.IsEnabled = !_recording && !_countingDown && !_player.IsPlaying;
     }
-    private void DeleteEvent_Click(object sender, RoutedEventArgs e) { if (EventList.SelectedItem is MacroEvent selected) _events.Remove(selected); EventCountText.Text = $"이벤트 {_events.Count}개"; }
+    private void AddEvent(MacroEvent item)
+    {
+        var continuesMouseGroup = item.Kind == MacroEventKind.MouseMove && _events.Count > 0 && _events[^1].Kind == MacroEventKind.MouseMove;
+        _events.Add(item);
+        if (item.Kind == MacroEventKind.MouseMove)
+        {
+            var group = continuesMouseGroup ? _eventRows.LastOrDefault(x => x.IsMouseMoveGroup) : null;
+            if (group is null)
+            {
+                group = EventListItem.Group(item);
+                _eventRows.Add(group);
+            }
+            else
+            {
+                group.AddToGroup(item);
+                if (group.IsExpanded) _eventRows.Add(EventListItem.Child(item, group));
+            }
+        }
+        else _eventRows.Add(EventListItem.Single(item));
+        UpdateEventCount();
+        UpdateMouseGroupButton();
+    }
+
+    private void RebuildEventRows(bool expandAll = false)
+    {
+        _eventRows.Clear();
+        EventListItem? currentGroup = null;
+        foreach (var item in _events)
+        {
+            if (item.Kind == MacroEventKind.MouseMove)
+            {
+                if (currentGroup is null)
+                {
+                    currentGroup = EventListItem.Group(item);
+                    _eventRows.Add(currentGroup);
+                }
+                else currentGroup.AddToGroup(item);
+            }
+            else
+            {
+                currentGroup = null;
+                _eventRows.Add(EventListItem.Single(item));
+            }
+        }
+        if (expandAll)
+            foreach (var group in _eventRows.Where(x => x.IsMouseMoveGroup).ToList()) ExpandGroup(group);
+        UpdateEventCount();
+        UpdateMouseGroupButton();
+    }
+
+    private void ExpandGroup(EventListItem group)
+    {
+        if (!group.IsMouseMoveGroup || group.IsExpanded) return;
+        var index = _eventRows.IndexOf(group) + 1;
+        foreach (var item in group.SourceEvents) _eventRows.Insert(index++, EventListItem.Child(item, group));
+        group.IsExpanded = true;
+    }
+
+    private void CollapseGroup(EventListItem group)
+    {
+        if (!group.IsMouseMoveGroup || !group.IsExpanded) return;
+        var index = _eventRows.IndexOf(group) + 1;
+        while (index < _eventRows.Count && ReferenceEquals(_eventRows[index].ParentGroup, group)) _eventRows.RemoveAt(index);
+        group.IsExpanded = false;
+    }
+
+    private void ToggleMouseGroup_Click(object sender, RoutedEventArgs e)
+    {
+        if (sender is not System.Windows.Controls.Button { Tag: EventListItem group }) return;
+        if (group.IsExpanded) CollapseGroup(group); else ExpandGroup(group);
+        UpdateMouseGroupButton();
+        e.Handled = true;
+    }
+
+    private void ToggleMouseGroups_Click(object sender, RoutedEventArgs e)
+    {
+        var groups = _eventRows.Where(x => x.IsMouseMoveGroup).ToList();
+        var expand = groups.Any(x => !x.IsExpanded);
+        foreach (var group in groups)
+            if (expand) ExpandGroup(group); else CollapseGroup(group);
+        UpdateMouseGroupButton();
+    }
+
+    private void UpdateMouseGroupButton()
+    {
+        if (ToggleMovesButton is null) return;
+        var groups = _eventRows.Where(x => x.IsMouseMoveGroup).ToList();
+        ToggleMovesButton.IsEnabled = groups.Count > 0;
+        ToggleMovesButton.Content = LocalizationService.T(groups.Count > 0 && groups.All(x => x.IsExpanded) ? "CollapseMouseMoves" : "ExpandMouseMoves");
+    }
+
+    private void UpdateEventCount() => EventCountText.Text = LocalizationService.F("EventCountFormat", _events.Count);
+    private void UpdateHotkeyFooter() => HotkeyFooterText.Text = LocalizationService.F("HotkeyFooterFormat", _settings.RecordHotkey, _settings.PlayHotkey, _settings.PauseHotkey, _settings.StopHotkey);
+    private void UpdateTargetText() => TargetText.Text = _target is null ? LocalizationService.T("NoTargetWindow") : LocalizationService.F("TargetPrefix", _target);
+
+    private void DeleteEvent_Click(object sender, RoutedEventArgs e)
+    {
+        var selected = EventList.SelectedItems.Cast<EventListItem>().SelectMany(x => x.SourceEvents).ToHashSet();
+        if (selected.Count == 0) return;
+        foreach (var item in _events.Where(selected.Contains).ToList()) _events.Remove(item);
+        RebuildEventRows();
+    }
     private void InsertSaveWait_Click(object sender, RoutedEventArgs e)
     {
         var timeoutSeconds = int.TryParse(SaveDialogTimeoutBox.Text, out var parsed) ? Math.Clamp(parsed, 1, 60) : 15;
-        var index = EventList.SelectedIndex >= 0 ? EventList.SelectedIndex : _events.Count;
+        var selectedEvent = (EventList.SelectedItem as EventListItem)?.SourceEvents.FirstOrDefault();
+        var index = selectedEvent is null ? _events.Count : _events.IndexOf(selectedEvent);
         var time = index < _events.Count ? _events[index].TimeMs : (_events.Count == 0 ? 0 : _events[^1].TimeMs);
-        _events.Insert(index, new MacroEvent { TimeMs = time, Kind = MacroEventKind.WaitForSaveDialog, TimeoutMs = timeoutSeconds * 1000 });
-        EventCountText.Text = $"이벤트 {_events.Count}개";
-        EventList.SelectedIndex = index;
+        var inserted = new MacroEvent { TimeMs = time, Kind = MacroEventKind.WaitForSaveDialog, TimeoutMs = timeoutSeconds * 1000 };
+        _events.Insert(index, inserted);
+        RebuildEventRows();
+        EventList.SelectedItem = _eventRows.FirstOrDefault(x => ReferenceEquals(x.Event, inserted));
     }
     private void EventList_KeyDown(object sender, System.Windows.Input.KeyEventArgs e) { if (e.Key == Key.Delete) DeleteEvent_Click(sender, e); }
     private void Save_Click(object sender, RoutedEventArgs e)
     {
-        var dialog = new WpfSaveFileDialog { Filter = "MuMiClick 매크로 (*.mumacro)|*.mumacro|JSON (*.json)|*.json", FileName = "macro.mumacro" };
+        var dialog = new WpfSaveFileDialog { Filter = LocalizationService.T("MacroFilter"), FileName = "macro.mumacro" };
         if (dialog.ShowDialog() != true) return;
         var doc = new MacroDocument { CoordinateMode = TargetRadio.IsChecked == true ? CoordinateMode.TargetWindow : CoordinateMode.AbsoluteScreen, TargetWindow = _target, Events = _events.ToList() };
-        File.WriteAllText(dialog.FileName, JsonSerializer.Serialize(doc, JsonOptions())); _settings.LastMacroPath = dialog.FileName; SaveSettings(_settings); SetIdle("매크로를 저장했습니다.");
+        File.WriteAllText(dialog.FileName, JsonSerializer.Serialize(doc, JsonOptions())); _settings.LastMacroPath = dialog.FileName; SaveSettings(_settings); SetIdle(LocalizationService.T("MacroSaved"));
     }
     private void Load_Click(object sender, RoutedEventArgs e)
     {
-        var dialog = new WpfOpenFileDialog { Filter = "MuMiClick 매크로 (*.mumacro;*.json)|*.mumacro;*.json" }; if (dialog.ShowDialog() != true) return;
-        try { var doc = JsonSerializer.Deserialize<MacroDocument>(File.ReadAllText(dialog.FileName), JsonOptions()) ?? throw new InvalidDataException(); if (doc.FormatVersion != 1) throw new InvalidDataException("지원하지 않는 매크로 형식입니다."); _events.Clear(); foreach (var x in doc.Events.OrderBy(x => x.TimeMs)) _events.Add(x); _target = doc.TargetWindow; AbsoluteRadio.IsChecked = doc.CoordinateMode == CoordinateMode.AbsoluteScreen; TargetRadio.IsChecked = doc.CoordinateMode == CoordinateMode.TargetWindow; TargetText.Text = _target is null ? "대상 창: 선택 안 됨" : "대상 창: " + _target; EventCountText.Text = $"이벤트 {_events.Count}개"; _settings.LastMacroPath = dialog.FileName; SaveSettings(_settings); SetIdle("매크로를 불러왔습니다."); }
-        catch (Exception ex) { WpfMessageBox.Show("파일을 읽을 수 없습니다: " + ex.Message); }
+        var dialog = new WpfOpenFileDialog { Filter = LocalizationService.T("MacroOpenFilter") }; if (dialog.ShowDialog() != true) return;
+        try { var doc = JsonSerializer.Deserialize<MacroDocument>(File.ReadAllText(dialog.FileName), JsonOptions()) ?? throw new InvalidDataException(); if (doc.FormatVersion != 1) throw new InvalidDataException(LocalizationService.T("UnsupportedFormat")); _events.Clear(); foreach (var x in doc.Events.OrderBy(x => x.TimeMs)) _events.Add(x); RebuildEventRows(); _target = doc.TargetWindow; AbsoluteRadio.IsChecked = doc.CoordinateMode == CoordinateMode.AbsoluteScreen; TargetRadio.IsChecked = doc.CoordinateMode == CoordinateMode.TargetWindow; UpdateTargetText(); _settings.LastMacroPath = dialog.FileName; SaveSettings(_settings); SetIdle(LocalizationService.T("MacroLoaded")); }
+        catch (Exception ex) { WpfMessageBox.Show(LocalizationService.F("FileReadErrorFormat", ex.Message)); }
     }
     private void RestoreLastMacro()
     {
@@ -215,31 +323,57 @@ public partial class MainWindow : Window
             if (doc.FormatVersion != 1) return;
             _events.Clear();
             foreach (var x in doc.Events.OrderBy(x => x.TimeMs)) _events.Add(x);
+            RebuildEventRows();
             _target = doc.TargetWindow;
             AbsoluteRadio.IsChecked = doc.CoordinateMode == CoordinateMode.AbsoluteScreen;
             TargetRadio.IsChecked = doc.CoordinateMode == CoordinateMode.TargetWindow;
-            TargetText.Text = _target is null ? "대상 창: 선택 안 됨" : "대상 창: " + _target;
-            EventCountText.Text = $"이벤트 {_events.Count}개";
-            SetIdle("최근 매크로를 자동으로 불러왔습니다.");
+            UpdateTargetText();
+            SetIdle(LocalizationService.T("RecentMacroLoaded"));
         }
         catch { _settings.LastMacroPath = null; SaveSettings(_settings); }
     }
     private void SelectTarget_Click(object sender, RoutedEventArgs e)
     {
         var options = WindowLocator.GetWindows(); var list = new System.Windows.Controls.ListBox { ItemsSource = options, DisplayMemberPath = "Item2", Margin = new Thickness(10), MinWidth = 500, MinHeight = 350 };
-        var ok = new System.Windows.Controls.Button { Content = "선택", IsDefault = true, Margin = new Thickness(5), MinWidth = 80 }; var cancel = new System.Windows.Controls.Button { Content = "취소", IsCancel = true, Margin = new Thickness(5), MinWidth = 80 };
+        var ok = new System.Windows.Controls.Button { Content = LocalizationService.T("Select"), IsDefault = true, Margin = new Thickness(5), MinWidth = 80 }; var cancel = new System.Windows.Controls.Button { Content = LocalizationService.T("Cancel"), IsCancel = true, Margin = new Thickness(5), MinWidth = 80 };
         var panel = new System.Windows.Controls.StackPanel(); panel.Children.Add(list); var actions = new System.Windows.Controls.StackPanel { Orientation = System.Windows.Controls.Orientation.Horizontal, HorizontalAlignment = System.Windows.HorizontalAlignment.Right }; actions.Children.Add(ok); actions.Children.Add(cancel); panel.Children.Add(actions);
-        var dialog = new Window { Owner = this, Title = "대상 창 선택", Content = panel, SizeToContent = SizeToContent.WidthAndHeight, WindowStartupLocation = WindowStartupLocation.CenterOwner };
-        ok.Click += (_, _) => dialog.DialogResult = list.SelectedItem is not null; if (dialog.ShowDialog() == true && list.SelectedItem is ValueTuple<IntPtr, TargetWindowInfo> selected) { _target = selected.Item2; TargetText.Text = "대상 창: " + _target; TargetRadio.IsChecked = true; }
+        var dialog = new Window { Owner = this, Title = LocalizationService.T("SelectTarget"), Content = panel, SizeToContent = SizeToContent.WidthAndHeight, WindowStartupLocation = WindowStartupLocation.CenterOwner };
+        ok.Click += (_, _) => dialog.DialogResult = list.SelectedItem is not null; if (dialog.ShowDialog() == true && list.SelectedItem is ValueTuple<IntPtr, TargetWindowInfo> selected) { _target = selected.Item2; UpdateTargetText(); TargetRadio.IsChecked = true; }
     }
-    private void ApplyHotkeys_Click(object sender, RoutedEventArgs e)
+    private void Settings_Click(object sender, RoutedEventArgs e)
     {
-        try { _settings.RecordHotkey = RecordHotkeyBox.Text; _settings.PlayHotkey = PlayHotkeyBox.Text; _settings.PauseHotkey = PauseHotkeyBox.Text; _settings.StopHotkey = StopHotkeyBox.Text; _settings.StopOnPhysicalInput = StopPhysicalBox.IsChecked == true; _hotkeys?.Register(_settings); SaveSettings(_settings); SetIdle("단축키를 적용했습니다."); }
-        catch (Exception ex) { WpfMessageBox.Show(ex.Message, "단축키 오류", MessageBoxButton.OK, MessageBoxImage.Warning); }
+        var dialog = new SettingsWindow(_settings) { Owner = this };
+        if (dialog.ShowDialog() != true) return;
+
+        var previous = (_settings.RecordHotkey, _settings.PlayHotkey, _settings.PauseHotkey, _settings.StopHotkey, _settings.Language);
+        _settings.RecordHotkey = dialog.RecordHotkey;
+        _settings.PlayHotkey = dialog.PlayHotkey;
+        _settings.PauseHotkey = dialog.PauseHotkey;
+        _settings.StopHotkey = dialog.StopHotkey;
+        _settings.Language = dialog.SelectedLanguage;
+        try
+        {
+            _hotkeys?.Register(_settings);
+        }
+        catch (Exception ex)
+        {
+            (_settings.RecordHotkey, _settings.PlayHotkey, _settings.PauseHotkey, _settings.StopHotkey, _settings.Language) = previous;
+            try { _hotkeys?.Register(_settings); } catch { }
+            WpfMessageBox.Show(this, ex.Message, LocalizationService.T("HotkeyRegistrationError"), MessageBoxButton.OK, MessageBoxImage.Warning);
+            return;
+        }
+
+        _settings.StopOnPhysicalInput = StopPhysicalBox.IsChecked == true;
+        LocalizationService.Apply(_settings.Language);
+        RebuildEventRows();
+        UpdateTargetText();
+        UpdateHotkeyFooter();
+        SaveSettings(_settings);
+        SetIdle(LocalizationService.T("HotkeysApplied"));
     }
     private void Elevate_Click(object sender, RoutedEventArgs e)
     {
-        try { Process.Start(new ProcessStartInfo(Environment.ProcessPath!) { UseShellExecute = true, Verb = "runas" }); WpfApplication.Current.Shutdown(); } catch { SetIdle("관리자 재실행이 취소되었거나 실패했습니다."); }
+        try { Process.Start(new ProcessStartInfo(Environment.ProcessPath!) { UseShellExecute = true, Verb = "runas" }); WpfApplication.Current.Shutdown(); } catch { SetIdle(LocalizationService.T("ElevateFailed")); }
     }
     private static JsonSerializerOptions JsonOptions() => new() { WriteIndented = true, PropertyNameCaseInsensitive = true };
     private static string SettingsPath => Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "MuMiClick", SettingsFileName);

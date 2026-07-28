@@ -1,7 +1,7 @@
 <Window x:Class="MuMiClick.MainWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        Title="MuMiClick - 마우스·키보드 매크로"
+        Title="{DynamicResource WindowTitle}"
         Icon="Assets/MuMiClick.ico"
         Width="1120" Height="760" MinWidth="1050" MinHeight="700"
         WindowStartupLocation="CenterScreen" Background="#F3F6FA"
@@ -85,7 +85,7 @@
             <Border x:Name="ModeBorder" CornerRadius="16" Padding="13,7" Background="#E8EEF8" BorderBrush="#D8E1EF" BorderThickness="1">
               <StackPanel Orientation="Horizontal">
                 <Ellipse x:Name="ModeDot" Width="8" Height="8" Margin="0,0,7,0" Fill="#8793A5"/>
-                <TextBlock Text="쉬운 모드" Foreground="#4E5B70" FontWeight="SemiBold"/>
+                <TextBlock Text="{DynamicResource EasyMode}" Foreground="#4E5B70" FontWeight="SemiBold"/>
               </StackPanel>
             </Border>
             <ControlTemplate.Triggers>
@@ -119,10 +119,13 @@
         </Border>
         <StackPanel Margin="13,0,0,0" VerticalAlignment="Center">
           <TextBlock Text="MuMiClick" FontSize="26" FontWeight="Bold" Foreground="{StaticResource TextBrush}"/>
-          <TextBlock Text="정확하고 빠른 마우스 · 키보드 매크로" Margin="1,3,0,0" Foreground="{StaticResource MutedBrush}"/>
+          <TextBlock Text="{DynamicResource AppSubtitle}" Margin="1,3,0,0" Foreground="{StaticResource MutedBrush}"/>
         </StackPanel>
       </StackPanel>
-      <CheckBox x:Name="EasyModeBox" Grid.Column="1" Style="{StaticResource ModeToggleStyle}" Click="EasyMode_Click" VerticalAlignment="Center"/>
+      <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
+        <Button Content="{DynamicResource SettingsButton}" Click="Settings_Click" Style="{StaticResource CompactButton}" Margin="0,0,10,0"/>
+        <CheckBox x:Name="EasyModeBox" Style="{StaticResource ModeToggleStyle}" Click="EasyMode_Click" VerticalAlignment="Center"/>
+      </StackPanel>
     </Grid>
 
     <Border Grid.Row="1" Background="White" CornerRadius="16" Padding="18" Effect="{StaticResource CardShadow}">
@@ -130,50 +133,50 @@
         <Grid>
           <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
           <WrapPanel VerticalAlignment="Center">
-            <Button x:Name="RecordButton" Click="Record_Click" Style="{StaticResource RecordActionButton}"><StackPanel Orientation="Horizontal"><TextBlock Text="●" Margin="0,0,7,0"/><TextBlock Text="녹화"/></StackPanel></Button>
-            <Button x:Name="StopButton" Click="Stop_Click" Style="{StaticResource StopActionButton}"><StackPanel Orientation="Horizontal"><TextBlock Text="■" Margin="0,0,7,0"/><TextBlock Text="정지"/></StackPanel></Button>
-            <Button x:Name="PlayButton" Click="Play_Click" Style="{StaticResource PrimaryButton}"><StackPanel Orientation="Horizontal"><TextBlock Text="▶" Margin="0,0,7,0"/><TextBlock Text="재생"/></StackPanel></Button>
+            <Button x:Name="RecordButton" Click="Record_Click" Style="{StaticResource RecordActionButton}" Content="{DynamicResource Record}"/>
+            <Button x:Name="StopButton" Click="Stop_Click" Style="{StaticResource StopActionButton}" Content="{DynamicResource Stop}"/>
+            <Button x:Name="PlayButton" Click="Play_Click" Style="{StaticResource PrimaryButton}" Content="{DynamicResource Play}"/>
           </WrapPanel>
           <Border Grid.Column="1" Background="#F7F9FC" BorderBrush="{StaticResource LineBrush}" BorderThickness="1" CornerRadius="10" Padding="12,8">
             <WrapPanel x:Name="BasicSettingsPanel" VerticalAlignment="Center">
-              <TextBlock Text="반복" VerticalAlignment="Center" FontWeight="SemiBold" Foreground="{StaticResource TextBrush}"/>
+              <TextBlock Text="{DynamicResource Repeat}" VerticalAlignment="Center" FontWeight="SemiBold" Foreground="{StaticResource TextBrush}"/>
               <TextBox x:Name="RepeatBox" Width="58" Text="1" Style="{StaticResource ModernTextBox}" Margin="8,0,8,0" TextAlignment="Center"/>
-              <TextBlock Text="회" VerticalAlignment="Center" Foreground="{StaticResource MutedBrush}"/>
-              <CheckBox x:Name="InfiniteBox" Content="무한 반복" Margin="14,0,0,0"/>
+              <TextBlock Text="{DynamicResource Times}" VerticalAlignment="Center" Foreground="{StaticResource MutedBrush}"/>
+              <CheckBox x:Name="InfiniteBox" Content="{DynamicResource InfiniteRepeat}" Margin="14,0,0,0"/>
             </WrapPanel>
           </Border>
         </Grid>
 
         <WrapPanel x:Name="AdvancedActionsPanel" Margin="0,14,0,0">
-          <Button x:Name="PauseButton" Click="Pause_Click" Style="{StaticResource ModernButton}">Ⅱ  일시정지 / 재개</Button>
-          <Button Click="Save_Click" Style="{StaticResource ModernButton}">저장</Button>
-          <Button Click="Load_Click" Style="{StaticResource ModernButton}">불러오기</Button>
-          <Button Click="SelectTarget_Click" Style="{StaticResource ModernButton}">대상 창 선택</Button>
-          <Button Click="Elevate_Click" Style="{StaticResource ModernButton}">관리자 재실행</Button>
+          <Button x:Name="PauseButton" Click="Pause_Click" Style="{StaticResource ModernButton}" Content="{DynamicResource PauseResume}"/>
+          <Button Click="Save_Click" Style="{StaticResource ModernButton}" Content="{DynamicResource Save}"/>
+          <Button Click="Load_Click" Style="{StaticResource ModernButton}" Content="{DynamicResource Load}"/>
+          <Button Click="SelectTarget_Click" Style="{StaticResource ModernButton}" Content="{DynamicResource SelectTarget}"/>
+          <Button Click="Elevate_Click" Style="{StaticResource ModernButton}" Content="{DynamicResource RunAsAdmin}"/>
         </WrapPanel>
 
         <Border x:Name="AdvancedDivider" Height="1" Background="{StaticResource LineBrush}" Margin="0,16,0,14"/>
 
         <StackPanel x:Name="AdvancedSettingsPanel">
           <WrapPanel VerticalAlignment="Center">
-          <TextBlock Text="속도" VerticalAlignment="Center" Foreground="{StaticResource MutedBrush}"/><ComboBox x:Name="SpeedBox" Width="78" SelectedIndex="1"><ComboBoxItem Content="0.5x"/><ComboBoxItem Content="1.0x"/><ComboBoxItem Content="1.5x"/><ComboBoxItem Content="2.0x"/></ComboBox>
-          <TextBlock Text="반복 간격" VerticalAlignment="Center" Foreground="{StaticResource MutedBrush}"/><TextBox x:Name="IntervalBox" Width="66" Text="0" Style="{StaticResource ModernTextBox}"/><TextBlock Text="ms" VerticalAlignment="Center" Margin="-8,0,10,0" Foreground="{StaticResource MutedBrush}"/>
-          <TextBlock Text="녹화 전" VerticalAlignment="Center" Foreground="{StaticResource MutedBrush}"/><TextBox x:Name="CountdownBox" Width="54" Text="0" Style="{StaticResource ModernTextBox}"/><TextBlock Text="초" VerticalAlignment="Center" Margin="-8,0,10,0" Foreground="{StaticResource MutedBrush}"/>
+          <TextBlock Text="{DynamicResource Speed}" VerticalAlignment="Center" Foreground="{StaticResource MutedBrush}"/><ComboBox x:Name="SpeedBox" Width="78" SelectedIndex="1"><ComboBoxItem Content="0.5x"/><ComboBoxItem Content="1.0x"/><ComboBoxItem Content="1.5x"/><ComboBoxItem Content="2.0x"/></ComboBox>
+          <TextBlock Text="{DynamicResource RepeatInterval}" VerticalAlignment="Center" Foreground="{StaticResource MutedBrush}"/><TextBox x:Name="IntervalBox" Width="66" Text="0" Style="{StaticResource ModernTextBox}"/><TextBlock Text="ms" VerticalAlignment="Center" Margin="-8,0,10,0" Foreground="{StaticResource MutedBrush}"/>
+          <TextBlock Text="{DynamicResource RecordingCountdown}" VerticalAlignment="Center" Foreground="{StaticResource MutedBrush}"/><TextBox x:Name="CountdownBox" Width="54" Text="0" Style="{StaticResource ModernTextBox}"/><TextBlock Text="{DynamicResource Second}" VerticalAlignment="Center" Margin="-8,0,10,0" Foreground="{StaticResource MutedBrush}"/>
           </WrapPanel>
           <WrapPanel Margin="0,9,0,0" VerticalAlignment="Center">
-          <CheckBox x:Name="StopPhysicalBox" Content="실제 입력 시 중지"/>
-          <CheckBox x:Name="SaveDialogStabilizationBox" Content="저장 창 자동 대기"/>
-          <TextBlock Text="최대" VerticalAlignment="Center" Foreground="{StaticResource MutedBrush}"/><TextBox x:Name="SaveDialogTimeoutBox" Width="52" Text="15" Style="{StaticResource ModernTextBox}"/><TextBlock Text="초" VerticalAlignment="Center" Margin="-8,0,10,0" Foreground="{StaticResource MutedBrush}"/>
-          <CheckBox x:Name="InstantMouseBox" Content="클릭 직전 순간 이동" ToolTip="중간 이동을 생략하고 클릭·휠·드래그 직전 좌표로 이동합니다."/>
-          <TextBlock Text="최소" VerticalAlignment="Center" Foreground="{StaticResource MutedBrush}"/><TextBox x:Name="InstantMouseDelayBox" Width="52" Text="30" Style="{StaticResource ModernTextBox}"/><TextBlock Text="ms" VerticalAlignment="Center" Margin="-8,0,0,0" Foreground="{StaticResource MutedBrush}"/>
+          <CheckBox x:Name="StopPhysicalBox" Content="{DynamicResource StopOnPhysicalInput}"/>
+          <CheckBox x:Name="SaveDialogStabilizationBox" Content="{DynamicResource SaveDialogAutoWait}"/>
+          <TextBlock Text="{DynamicResource Maximum}" VerticalAlignment="Center" Foreground="{StaticResource MutedBrush}"/><TextBox x:Name="SaveDialogTimeoutBox" Width="52" Text="15" Style="{StaticResource ModernTextBox}"/><TextBlock Text="{DynamicResource Second}" VerticalAlignment="Center" Margin="-8,0,10,0" Foreground="{StaticResource MutedBrush}"/>
+          <CheckBox x:Name="InstantMouseBox" Content="{DynamicResource InstantMouseMovement}" ToolTip="{DynamicResource InstantMouseToolTip}"/>
+          <TextBlock Text="{DynamicResource Minimum}" VerticalAlignment="Center" Foreground="{StaticResource MutedBrush}"/><TextBox x:Name="InstantMouseDelayBox" Width="52" Text="30" Style="{StaticResource ModernTextBox}"/><TextBlock Text="ms" VerticalAlignment="Center" Margin="-8,0,0,0" Foreground="{StaticResource MutedBrush}"/>
           </WrapPanel>
         </StackPanel>
 
         <WrapPanel x:Name="CoordinatePanel" Margin="0,13,0,0">
-          <TextBlock Text="좌표 기준" Margin="0,0,14,0" FontWeight="SemiBold" Foreground="{StaticResource TextBrush}" VerticalAlignment="Center"/>
-          <RadioButton x:Name="AbsoluteRadio" IsChecked="True" Content="화면 절대 좌표"/>
-          <RadioButton x:Name="TargetRadio" Content="대상 창 상대 좌표"/>
-          <TextBlock x:Name="TargetText" Margin="6,0,0,0" Foreground="{StaticResource MutedBrush}" VerticalAlignment="Center" Text="대상 창: 선택 안 됨" TextTrimming="CharacterEllipsis" MaxWidth="360"/>
+          <TextBlock Text="{DynamicResource CoordinateReference}" Margin="0,0,14,0" FontWeight="SemiBold" Foreground="{StaticResource TextBrush}" VerticalAlignment="Center"/>
+          <RadioButton x:Name="AbsoluteRadio" IsChecked="True" Content="{DynamicResource AbsoluteScreen}"/>
+          <RadioButton x:Name="TargetRadio" Content="{DynamicResource TargetWindowRelative}"/>
+          <TextBlock x:Name="TargetText" Margin="6,0,0,0" Foreground="{StaticResource MutedBrush}" VerticalAlignment="Center" Text="{DynamicResource NoTargetWindow}" TextTrimming="CharacterEllipsis" MaxWidth="360"/>
         </WrapPanel>
       </StackPanel>
     </Border>
@@ -183,47 +186,46 @@
         <Grid.ColumnDefinitions><ColumnDefinition Width="Auto"/><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
         <Border Width="10" Height="10" CornerRadius="5" Background="#5EE09A" VerticalAlignment="Center" Margin="0,0,11,0"/>
         <StackPanel Grid.Column="1">
-          <TextBlock x:Name="StatusText" FontWeight="Bold" Foreground="White" Text="상태: 대기"/>
-          <TextBlock x:Name="DetailText" Foreground="#B8C2D5" Margin="0,3,0,0" Text="녹화는 사용자가 시작할 때만 동작하며 데이터는 외부로 전송되지 않습니다." TextTrimming="CharacterEllipsis"/>
+          <TextBlock x:Name="StatusText" FontWeight="Bold" Foreground="White" Text="{DynamicResource StatusIdle}"/>
+          <TextBlock x:Name="DetailText" Foreground="#B8C2D5" Margin="0,3,0,0" Text="{DynamicResource PrivacyNotice}" TextTrimming="CharacterEllipsis"/>
         </StackPanel>
         <TextBlock x:Name="ElapsedText" Grid.Column="2" FontSize="22" FontWeight="SemiBold" Foreground="White" VerticalAlignment="Center" Margin="18,0" Text="00:00.0"/>
-        <Border Grid.Column="3" Background="#263248" CornerRadius="10" Padding="12,7" VerticalAlignment="Center"><TextBlock x:Name="EventCountText" Foreground="#D9E1EF" Text="이벤트 0개"/></Border>
+        <Border Grid.Column="3" Background="#263248" CornerRadius="10" Padding="12,7" VerticalAlignment="Center"><TextBlock x:Name="EventCountText" Foreground="#D9E1EF"/></Border>
       </Grid>
     </Border>
 
     <Grid x:Name="AdvancedWorkspace" Grid.Row="3">
-      <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="286"/></Grid.ColumnDefinitions>
-      <Border Background="White" CornerRadius="16" Padding="16" Margin="0,0,14,0" Effect="{StaticResource CardShadow}">
+      <Border Background="White" CornerRadius="16" Padding="16" Effect="{StaticResource CardShadow}">
         <DockPanel>
           <Grid DockPanel.Dock="Top" Margin="2,0,2,12">
             <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
-            <StackPanel><TextBlock Text="녹화된 이벤트" FontSize="16" FontWeight="Bold" Foreground="{StaticResource TextBrush}"/><TextBlock Text="선택한 이벤트를 삭제하거나 저장 창 대기를 삽입할 수 있습니다." Margin="0,3,0,0" Foreground="{StaticResource MutedBrush}" FontSize="12"/></StackPanel>
-            <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center"><Button Click="InsertSaveWait_Click" Style="{StaticResource CompactButton}">저장 창 대기</Button><Button Click="DeleteEvent_Click" Style="{StaticResource CompactButton}" Margin="0">선택 삭제</Button></StackPanel>
+            <StackPanel><TextBlock Text="{DynamicResource RecordedEvents}" FontSize="16" FontWeight="Bold" Foreground="{StaticResource TextBrush}"/><TextBlock Text="{DynamicResource EventHelp}" Margin="0,3,0,0" Foreground="{StaticResource MutedBrush}" FontSize="12"/></StackPanel>
+            <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
+              <Button x:Name="ToggleMovesButton" Click="ToggleMouseGroups_Click" Style="{StaticResource CompactButton}" Content="{DynamicResource ExpandMouseMoves}"/>
+              <Button Click="InsertSaveWait_Click" Style="{StaticResource CompactButton}" Content="{DynamicResource InsertSaveWait}"/>
+              <Button Click="DeleteEvent_Click" Style="{StaticResource CompactButton}" Margin="0" Content="{DynamicResource DeleteSelected}"/>
+            </StackPanel>
           </Grid>
-          <ListBox x:Name="EventList" DisplayMemberPath="Display" KeyDown="EventList_KeyDown" BorderThickness="1" BorderBrush="{StaticResource LineBrush}" Background="#FBFCFE" Padding="6" FontFamily="Consolas"/>
+          <ListBox x:Name="EventList" SelectionMode="Extended" KeyDown="EventList_KeyDown" BorderThickness="1" BorderBrush="{StaticResource LineBrush}" Background="#FBFCFE" Padding="6" FontFamily="Consolas">
+            <ListBox.ItemTemplate>
+              <DataTemplate>
+                <DockPanel LastChildFill="True">
+                  <Button DockPanel.Dock="Left" Width="25" Height="24" Padding="0" Margin="0,0,5,0"
+                          Visibility="{Binding ExpandVisibility}" Content="{Binding ExpandGlyph}" Tag="{Binding}"
+                          Click="ToggleMouseGroup_Click" Background="Transparent" BorderThickness="0" Cursor="Hand"/>
+                  <TextBlock Text="{Binding Display}" Margin="{Binding ContentMargin}" VerticalAlignment="Center" TextTrimming="CharacterEllipsis"/>
+                </DockPanel>
+              </DataTemplate>
+            </ListBox.ItemTemplate>
+          </ListBox>
         </DockPanel>
-      </Border>
-
-      <Border Grid.Column="1" Background="White" CornerRadius="16" Padding="18" Effect="{StaticResource CardShadow}">
-        <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
-        <StackPanel Margin="0,0,5,0">
-          <TextBlock Text="전역 단축키" FontSize="16" FontWeight="Bold" Foreground="{StaticResource TextBrush}"/>
-          <TextBlock Text="프로그램이 뒤에 있어도 동작합니다." Margin="0,3,0,16" Foreground="{StaticResource MutedBrush}" FontSize="12"/>
-          <TextBlock Text="녹화 시작 / 종료" Style="{StaticResource SectionLabel}"/><TextBox x:Name="RecordHotkeyBox" Style="{StaticResource ModernTextBox}" Margin="0,0,0,11"/>
-          <TextBlock Text="재생 시작" Style="{StaticResource SectionLabel}"/><TextBox x:Name="PlayHotkeyBox" Style="{StaticResource ModernTextBox}" Margin="0,0,0,11"/>
-          <TextBlock Text="일시정지 / 재개" Style="{StaticResource SectionLabel}"/><TextBox x:Name="PauseHotkeyBox" Style="{StaticResource ModernTextBox}" Margin="0,0,0,11"/>
-          <TextBlock Text="긴급 중지" Style="{StaticResource SectionLabel}"/><TextBox x:Name="StopHotkeyBox" Style="{StaticResource ModernTextBox}" Margin="0,0,0,14"/>
-          <Button Click="ApplyHotkeys_Click" Style="{StaticResource PrimaryButton}" Margin="0">단축키 적용</Button>
-          <Border Background="#FFF8E7" BorderBrush="#F4DDA5" BorderThickness="1" CornerRadius="9" Padding="10" Margin="0,14,0,0"><TextBlock TextWrapping="Wrap" Foreground="#7C6328" FontSize="12">관리자 권한 프로그램을 제어하려면 MuMiClick도 관리자 권한으로 실행하세요.</TextBlock></Border>
-        </StackPanel>
-        </ScrollViewer>
       </Border>
     </Grid>
 
     <Grid x:Name="AdvancedFooter" Grid.Row="4" Margin="2,12,2,0">
       <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
-      <TextBlock Foreground="{StaticResource MutedBrush}" Text="F8 녹화  ·  F9 재생  ·  F11 일시정지  ·  F7 긴급 중지"/>
-      <TextBlock Grid.Column="1" Foreground="#98A2B3" Text="로컬 저장 · 광고 없음 · 텔레메트리 없음"/>
+      <TextBlock x:Name="HotkeyFooterText" Foreground="{StaticResource MutedBrush}"/>
+      <TextBlock Grid.Column="1" Foreground="#98A2B3" Text="{DynamicResource LocalOnlyFooter}"/>
     </Grid>
   </Grid>
 </Window>

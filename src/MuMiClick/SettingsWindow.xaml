@@ -1,0 +1,66 @@
+<Window x:Class="MuMiClick.SettingsWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="{DynamicResource SettingsTitle}" Icon="Assets/MuMiClick.ico"
+        Width="500" Height="600" MinWidth="470" MinHeight="560"
+        WindowStartupLocation="CenterOwner" ResizeMode="CanResize"
+        Background="#F3F6FA" FontFamily="Segoe UI" FontSize="13">
+  <Window.Resources>
+    <SolidColorBrush x:Key="TextBrush" Color="#172033"/>
+    <SolidColorBrush x:Key="MutedBrush" Color="#687386"/>
+    <SolidColorBrush x:Key="LineBrush" Color="#E3E8F0"/>
+    <Style TargetType="TextBox">
+      <Setter Property="Height" Value="38"/><Setter Property="Padding" Value="10,6"/>
+      <Setter Property="Background" Value="#F8FAFC"/><Setter Property="Foreground" Value="{StaticResource TextBrush}"/>
+      <Setter Property="BorderBrush" Value="{StaticResource LineBrush}"/><Setter Property="BorderThickness" Value="1"/>
+      <Setter Property="VerticalContentAlignment" Value="Center"/>
+    </Style>
+    <Style TargetType="ComboBox">
+      <Setter Property="Height" Value="38"/><Setter Property="Padding" Value="8,4"/>
+      <Setter Property="Background" Value="#F8FAFC"/><Setter Property="BorderBrush" Value="{StaticResource LineBrush}"/>
+    </Style>
+    <Style x:Key="Label" TargetType="TextBlock">
+      <Setter Property="Foreground" Value="{StaticResource MutedBrush}"/><Setter Property="FontSize" Value="12"/>
+      <Setter Property="FontWeight" Value="SemiBold"/><Setter Property="Margin" Value="0,0,0,5"/>
+    </Style>
+    <Style x:Key="DialogButton" TargetType="Button">
+      <Setter Property="Height" Value="40"/><Setter Property="MinWidth" Value="92"/><Setter Property="Padding" Value="16,0"/>
+      <Setter Property="Margin" Value="8,0,0,0"/><Setter Property="FontWeight" Value="SemiBold"/><Setter Property="Cursor" Value="Hand"/>
+      <Setter Property="Background" Value="White"/><Setter Property="Foreground" Value="{StaticResource TextBrush}"/>
+      <Setter Property="BorderBrush" Value="{StaticResource LineBrush}"/><Setter Property="BorderThickness" Value="1"/>
+    </Style>
+  </Window.Resources>
+
+  <Grid Margin="24">
+    <Grid.RowDefinitions><RowDefinition Height="*"/><RowDefinition Height="Auto"/></Grid.RowDefinitions>
+    <ScrollViewer VerticalScrollBarVisibility="Auto">
+      <StackPanel>
+        <TextBlock Text="{DynamicResource GlobalHotkeys}" FontSize="21" FontWeight="Bold" Foreground="{StaticResource TextBrush}"/>
+        <TextBlock Text="{DynamicResource GlobalHotkeyHelp}" Margin="0,5,0,20" Foreground="{StaticResource MutedBrush}" TextWrapping="Wrap"/>
+
+        <TextBlock Text="{DynamicResource RecordStartStop}" Style="{StaticResource Label}"/>
+        <TextBox x:Name="RecordHotkeyBox" Margin="0,0,0,13"/>
+        <TextBlock Text="{DynamicResource PlayStart}" Style="{StaticResource Label}"/>
+        <TextBox x:Name="PlayHotkeyBox" Margin="0,0,0,13"/>
+        <TextBlock Text="{DynamicResource PauseResumeLabel}" Style="{StaticResource Label}"/>
+        <TextBox x:Name="PauseHotkeyBox" Margin="0,0,0,13"/>
+        <TextBlock Text="{DynamicResource EmergencyStop}" Style="{StaticResource Label}"/>
+        <TextBox x:Name="StopHotkeyBox" Margin="0,0,0,22"/>
+
+        <Border Height="1" Background="{StaticResource LineBrush}" Margin="0,0,0,20"/>
+        <TextBlock Text="{DynamicResource Language}" FontSize="17" FontWeight="Bold" Foreground="{StaticResource TextBrush}"/>
+        <TextBlock Text="{DynamicResource LanguageHelp}" Margin="0,4,0,10" Foreground="{StaticResource MutedBrush}"/>
+        <ComboBox x:Name="LanguageBox">
+          <ComboBoxItem Content="{DynamicResource LanguageAuto}" Tag="auto"/>
+          <ComboBoxItem Content="{DynamicResource Korean}" Tag="ko-KR"/>
+          <ComboBoxItem Content="{DynamicResource English}" Tag="en-US"/>
+        </ComboBox>
+      </StackPanel>
+    </ScrollViewer>
+
+    <StackPanel Grid.Row="1" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,22,0,0">
+      <Button Content="{DynamicResource Cancel}" IsCancel="True" Style="{StaticResource DialogButton}"/>
+      <Button Content="{DynamicResource Apply}" IsDefault="True" Click="Apply_Click" Style="{StaticResource DialogButton}" Background="#2563EB" Foreground="White" BorderThickness="0"/>
+    </StackPanel>
+  </Grid>
+</Window>

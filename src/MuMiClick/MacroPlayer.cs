@@ -18,7 +18,7 @@ internal sealed class MacroPlayer
 
     public async Task PlayAsync(MacroDocument doc, int repeat, bool infinite, double speed, int intervalMs, bool instantMouseMovement, int instantMouseDelayMs, CancellationToken appToken)
     {
-        if (doc.Events.Count == 0) throw new InvalidOperationException("재생할 녹화 이벤트가 없습니다.");
+        if (doc.Events.Count == 0) throw new InvalidOperationException(LocalizationService.T("NoEvents"));
         if (IsPlaying) return;
         _cancel = CancellationTokenSource.CreateLinkedTokenSource(appToken); var ct = _cancel.Token;
         try
@@ -26,7 +26,7 @@ internal sealed class MacroPlayer
             IntPtr target = IntPtr.Zero;
             if (doc.CoordinateMode == CoordinateMode.TargetWindow)
             {
-                if (doc.TargetWindow is null || (target = WindowLocator.Find(doc.TargetWindow)) == IntPtr.Zero) throw new InvalidOperationException("저장된 대상 창을 찾을 수 없습니다. 창을 연 뒤 다시 선택하세요.");
+                if (doc.TargetWindow is null || (target = WindowLocator.Find(doc.TargetWindow)) == IntPtr.Zero) throw new InvalidOperationException(LocalizationService.T("TargetWindowMissing"));
                 NativeMethods.SetForegroundWindow(target);
                 await Task.Delay(120, ct);
             }
@@ -38,10 +38,10 @@ internal sealed class MacroPlayer
                 if ((infinite || loop < count) && intervalMs > 0) await DelayWithPauseAsync(intervalMs, ct);
                 if (infinite && loop == long.MaxValue) loop = 0;
             }
-            Completed?.Invoke("재생 완료");
+            Completed?.Invoke(LocalizationService.T("PlaybackCompleted"));
         }
-        catch (OperationCanceledException) { Completed?.Invoke("재생 중지됨"); }
-        catch (Exception ex) { Completed?.Invoke("재생 오류: " + ex.Message); }
+        catch (OperationCanceledException) { Completed?.Invoke(LocalizationService.T("PlaybackStopped")); }
+        catch (Exception ex) { Completed?.Invoke(LocalizationService.F("PlaybackErrorFormat", ex.Message)); }
         finally { ReleaseAll(); ResumeWaiters(); _activeClock = null; _cancel?.Dispose(); _cancel = null; }
     }
     private async Task PlayOnce(IReadOnlyList<MacroEvent> events, IntPtr target, double speed, long loop, long total, long end, bool instantMouseMovement, int instantMouseDelayMs, CancellationToken ct)

@@ -29,7 +29,7 @@ internal sealed class InputHook : IDisposable
         var module = NativeMethods.GetModuleHandle(null);
         _keyboardHook = NativeMethods.SetWindowsHookEx(NativeMethods.WH_KEYBOARD_LL, _keyboardProc, module, 0);
         _mouseHook = NativeMethods.SetWindowsHookEx(NativeMethods.WH_MOUSE_LL, _mouseProc, module, 0);
-        if (_keyboardHook == IntPtr.Zero || _mouseHook == IntPtr.Zero) throw new InvalidOperationException("전역 입력 훅을 설치할 수 없습니다.");
+        if (_keyboardHook == IntPtr.Zero || _mouseHook == IntPtr.Zero) throw new InvalidOperationException(LocalizationService.T("HookInstallFailed"));
     }
     public void StartRecording()
     {

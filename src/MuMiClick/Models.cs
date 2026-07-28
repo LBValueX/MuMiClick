@@ -18,14 +18,25 @@ public sealed class MacroEvent
     public uint ScanCode { get; set; }
     public bool Extended { get; set; }
     public int TimeoutMs { get; set; }
-    [JsonIgnore] public string Display => $"{TimeMs,7} ms  {Kind,-10} {Describe()}";
+    [JsonIgnore] public string Display => $"{TimeMs,7} ms  {KindName(),-14} {Describe()}";
+    private string KindName() => Kind switch
+    {
+        MacroEventKind.MouseMove => LocalizationService.T("MouseMove"),
+        MacroEventKind.MouseDown => LocalizationService.T("MouseDown"),
+        MacroEventKind.MouseUp => LocalizationService.T("MouseUp"),
+        MacroEventKind.MouseWheel => LocalizationService.T("MouseWheel"),
+        MacroEventKind.KeyDown => LocalizationService.T("KeyDown"),
+        MacroEventKind.KeyUp => LocalizationService.T("KeyUp"),
+        MacroEventKind.WaitForSaveDialog => LocalizationService.T("WaitForSaveDialog"),
+        _ => Kind.ToString()
+    };
     private string Describe() => Kind switch
     {
         MacroEventKind.MouseMove => $"({X}, {Y})",
         MacroEventKind.MouseDown or MacroEventKind.MouseUp => $"{Button} ({X}, {Y})",
         MacroEventKind.MouseWheel => $"{Delta} ({X}, {Y})",
-        MacroEventKind.WaitForSaveDialog => $"최대 {Math.Max(1, TimeoutMs / 1000)}초",
-        _ => $"VK {VirtualKey} / Scan {ScanCode}" + (Extended ? " (확장)" : "")
+        MacroEventKind.WaitForSaveDialog => $"{LocalizationService.T("Maximum")} {Math.Max(1, TimeoutMs / 1000)} {LocalizationService.T("Second")}",
+        _ => $"VK {VirtualKey} / Scan {ScanCode}" + (Extended ? $" ({LocalizationService.T("ExtendedKey")})" : "")
     };
 }
 
@@ -55,6 +66,7 @@ public sealed class UserSettings
     public string PlayHotkey { get; set; } = "F9";
     public string PauseHotkey { get; set; } = "F11";
     public string StopHotkey { get; set; } = "F7";
+    public string Language { get; set; } = "auto";
     public bool StopOnPhysicalInput { get; set; } = true;
     public string? LastMacroPath { get; set; }
     public bool SimpleMode { get; set; }

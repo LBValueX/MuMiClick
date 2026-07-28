@@ -1,98 +1,112 @@
 # MuMiClick
 
-<img src="src/MuMiClick/Assets/MuMiClick-logo.png" alt="MuMiClick 로고" width="96">
+<img src="src/MuMiClick/Assets/MuMiClick-logo.png" alt="MuMiClick logo" width="96">
 
-Windows 10/11 x64용 마우스·키보드 매크로 녹화기입니다. ReMouse와 같이 복잡한 스크립트 없이 녹화하고 자연스러운 간격으로 반복 재생하는 데 초점을 맞췄습니다. 모든 데이터는 로컬 JSON 파일이며 네트워크·광고·계정·텔레메트리가 없습니다.
+**English** · [한국어](README.ko.md)
 
-## 실행 파일
+MuMiClick is a practical mouse and keyboard macro recorder for Windows 10/11 x64. It is designed for simple recording and reliable playback without scripting, with scan-code keyboard injection, timestamp-based scheduling, and independent emergency-stop handling.
 
-- 포터블 단일 실행 파일: [GitHub Releases 최신 버전](https://github.com/AppStudioLB/MuMiClick/releases/latest)
-- 요구 사항: Windows 10/11 x64. 이 배포본은 .NET 설치 없이 실행됩니다.
+All macro data stays on your computer. MuMiClick has no ads, accounts, login, telemetry, or network data transfer.
 
-## 사용법
+## Download
 
-1. `MuMiClick.exe`를 실행합니다.
-2. 간단히 쓰려면 상단의 **쉬운 모드**를 켭니다. 녹화·정지·재생, 반복 횟수와 무한 반복만 표시됩니다.
-3. **녹화**를 누르거나 `F8`을 누릅니다. 필요하면 먼저 녹화 전 카운트다운을 지정합니다.
-4. 마우스와 키보드를 사용한 뒤 같은 단축키 또는 **정지**로 녹화를 끝냅니다.
-5. 반복 횟수, 무한 반복, 속도, 반복 간격을 선택하고 **재생**을 누릅니다.
-6. **저장**으로 `.mumacro` JSON 매크로를 보관하고, **불러오기**로 다음 실행 때 재사용합니다.
+- [Latest portable Windows release](https://github.com/AppStudioLB/MuMiClick/releases/latest)
+- Requirements: Windows 10 or Windows 11, x64
+- The portable single-file build includes the .NET runtime.
 
-저장하거나 불러온 가장 최근 매크로는 다음 프로그램 시작 시 자동으로 불러옵니다. 파일이 이동 또는 삭제된 경우에는 자동 불러오기를 건너뜁니다.
+## Quick start
 
-### 브라우저 이미지 저장 안정화
+1. Run `MuMiClick.exe`.
+2. Press **Record** or `F8`, then perform the mouse and keyboard actions you want to capture.
+3. Press `F8` again or click **Stop**.
+4. Choose the repeat count, playback speed, and loop delay, then click **Play** or press `F9`.
+5. Press `F11` to pause or resume, and `F7` for emergency stop.
+6. Use **Save** to create a local `.mumacro` JSON file. The most recently loaded or saved macro is restored at the next launch.
 
-고급 모드의 **저장 창 자동 대기**를 켜면 녹화 중 `다른 이름으로 저장` 창에서 첫 입력이 발생할 때 대기 이벤트를 자동으로 기록합니다. 재생 시 저장 창과 입력 컨트롤이 실제로 준비될 때까지 기다린 후 파일 이름 입력을 이어가므로, 파일 탐색기가 늦게 떠서 붙여넣기가 누락되는 문제를 줄입니다. 기존 매크로는 이벤트를 선택하고 **저장 창 대기 삽입**을 눌러 같은 동작을 추가할 수 있습니다. 기본 최대 대기시간은 15초이며 1~60초로 변경할 수 있습니다.
+Enable **Easy mode** in the upper-right corner to keep only Record, Stop, Play, repeat count, and infinite repeat on screen.
 
-### 빠른 마우스 이동
+## Settings and languages
 
-고급 모드의 **클릭 직전 순간 이동**을 켜면 중간 마우스 이동 이벤트를 생략하고 클릭·휠·드래그 종료 직전에 녹화된 정확한 좌표로 이동합니다. 녹화된 이동 시간도 압축되며, 드래그를 인식할 수 있도록 최소 이동 지연을 기본 30ms로 유지합니다. 필요하면 0~500ms로 조절할 수 있습니다.
+Open **Settings** in the upper-right corner to edit all global hotkeys and the display language.
 
-기본 전역 단축키는 다음과 같습니다.
+- `Auto (Windows)`: Korean when the Windows display language is Korean; English otherwise
+- `한국어`: always use Korean
+- `English`: always use English
 
-| 기능 | 기본 단축키 |
+The default global hotkeys are:
+
+| Action | Default |
 | --- | --- |
-| 녹화 시작/종료 | `F8` |
-| 재생 시작 | `F9` |
-| 일시정지/재개 | `F11` |
-| 긴급 중지 | `F7` |
+| Start / stop recording | `F8` |
+| Start playback | `F9` |
+| Pause / resume | `F11` |
+| Emergency stop | `F7` |
 
-오른쪽의 단축키 설정에서 `F8` 또는 `Ctrl+Alt+F8` 같은 형식으로 바꾼 후 **단축키 적용**을 누르세요. 다른 프로그램이 이미 잡은 단축키는 등록할 수 없습니다. 기본값에서는 F10을 사용하지 않습니다.
+Single keys and combinations such as `Ctrl+Alt+F8` are supported. Hotkeys must be unique and may fail to register if another application already owns them.
 
-## 대상 창 상대 좌표
+## Event list
 
-**대상 창 선택**에서 창을 고르고 `대상 창 상대 좌표`를 선택한 다음 녹화합니다. 재생할 때 제목·프로세스·창 클래스가 같은 창을 다시 찾아, 창이 이동했어도 같은 클라이언트 영역 좌표를 클릭합니다. 대상 창을 찾지 못하면 재생하지 않고 안내합니다.
+Consecutive mouse-move events are collapsed into one row to keep recordings readable. Use the arrow on an individual group or **Expand moves** to inspect the original events.
 
-## 안정성 설계
+- Shift-click selects a continuous range.
+- Ctrl-click adds or removes individual rows from the selection.
+- Deleting a collapsed movement group removes every movement event represented by that group.
+- Delete also works from the keyboard.
 
-- `WH_MOUSE_LL`, `WH_KEYBOARD_LL`로 전역 입력을 시간순으로 수집합니다.
-- 키보드는 문자 변환이 아닌 scan code 기반 `SendInput`으로 KeyDown/KeyUp을 각각 전송합니다.
-- 재생 스케줄은 누적 `Sleep`이 아니라 녹화 시작점 기준 타임스탬프를 사용합니다.
-- 재생 중 눌린 키와 마우스 버튼을 추적하고, 긴급 중지·오류·종료 시 모두 강제 해제합니다.
-- `dwExtraInfo` 마커로 자체 주입 입력을 녹화에서 제외합니다.
-- 마우스 이동은 2px/8ms 기준으로 압축하지만 클릭·휠의 실제 좌표는 보존합니다.
-- 가상 데스크톱 좌표와 `MOUSEEVENTF_VIRTUALDESK`를 사용하므로 음수 좌표 멀티 모니터와 DPI 배율 환경을 지원합니다.
-- `실제 입력 시 재생 중지`는 기본으로 켜져 있으며, 사용자의 물리 입력을 감지하면 즉시 재생을 취소합니다. 필요하면 고급 모드에서 끌 수 있습니다. 긴급 중지는 재생 대기와 별도 취소 토큰으로 처리됩니다.
+Grouping changes only how the list is displayed. Saved macro data and playback timing retain the original movement events.
 
-## 관리자 권한
+## Save As dialog stabilization
 
-Windows의 UIPI 정책 때문에 일반 권한 프로그램은 관리자 권한 창에 입력을 주입하지 못할 수 있습니다. 그런 대상을 제어하려면 프로그램의 **관리자 재실행** 버튼을 누르고 UAC 승인을 하세요. MuMiClick 자체는 기본적으로 일반 권한으로 실행됩니다.
+Enable **Wait for Save As dialog** in advanced mode when a recorded workflow opens a slow browser or file-save dialog. MuMiClick records a wait marker and pauses playback until the dialog and its input controls are ready. The timeout is configurable from 1 to 60 seconds and defaults to 15 seconds.
 
-## 빌드
+Existing macros can receive the same marker with **Insert Save wait** in the event list.
+
+## Instant mouse movement
+
+Enable **Jump before click** to skip intermediate mouse movement during playback and jump directly to the accurate coordinates immediately before clicks, wheel input, and drag endpoints. A small configurable delay, 30 ms by default, keeps drag detection reliable.
+
+## Coordinate modes
+
+- **Absolute screen** replays positions on the Windows virtual desktop and supports multi-monitor negative coordinates.
+- **Relative to target window** finds the selected window again before playback and clicks the same client-area position even after the window moves. Playback is refused when the target cannot be found.
+
+## Input reliability and safety
+
+- Recording uses `WH_MOUSE_LL` and `WH_KEYBOARD_LL`.
+- Playback uses scan-code `SendInput`, with separate KeyDown and KeyUp events.
+- Mouse and keyboard events share one timestamp-ordered timeline.
+- Playback schedules against the recording start timestamp, avoiding accumulated relative-sleep drift.
+- Injected input is marked with `dwExtraInfo` and excluded from recording.
+- Held keys and mouse buttons are tracked and forcibly released after stop, error, or completion.
+- **Stop on physical input** is enabled by default and immediately cancels playback when the user operates the real mouse or keyboard.
+- Emergency stop has an independent cancellation path and also works during loop delays.
+- Per-monitor-v2 DPI awareness and `MOUSEEVENTF_VIRTUALDESK` support 125%/150% scaling and multi-monitor layouts.
+
+Windows UIPI can block a normal process from injecting input into an elevated application. Use **Restart as administrator** and approve UAC when controlling such a target.
+
+## Build
 
 ```powershell
 dotnet build MuMiClick.sln -c Release
 dotnet publish src\MuMiClick\MuMiClick.csproj -c Release -p:PublishProfile=Portable-win-x64 -o .\release\MuMiClick-win-x64
 ```
 
-## 자동 테스트
-
-외부 테스트 프레임워크 없이 실행 가능한 스모크 테스트가 포함되어 있습니다.
+## Automated tests
 
 ```powershell
 dotnet run --project tests\MuMiClick.SmokeTests\MuMiClick.SmokeTests.csproj -c Release
 ```
 
-검증 항목: 실제 입력 시 중지 기본값, 기본 긴급 중지 단축키 파싱, JSON 저장/복원, KeyDown/KeyUp 보존, 타임스탬프 순서.
+The smoke suite covers safe defaults, language selection, single-key hotkey parsing, JSON round trips, KeyDown/KeyUp preservation, Save-dialog wait events, timestamp ordering, and mouse-movement display grouping.
 
-## 테스트 결과
+## Known limitations
 
-- 2026-07-28: `dotnet build MuMiClick.sln -c Release` 성공 (경고 0, 오류 0).
-- 2026-07-28: 자동 스모크 테스트 5/5 통과.
-- 2026-07-28: self-contained 단일 파일 `MuMiClick.exe` 생성 및 시작 응답 확인 (약 155MB).
-- 실제 데스크톱 입력을 보내는 수동 시나리오(메모장 100회·멀티 모니터·관리자 창)는 이 환경의 UI 제어 권한이 허가되지 않아 실행하지 못했습니다. 배포 전에는 아래 수동 테스트를 수행하세요.
+- Low-level hooks and `SendInput` are Windows-only.
+- UIPI requires MuMiClick to run at the same or higher integrity level as the target.
+- Secure desktop, UAC credential screens, some anti-cheat software, and applications that reject synthetic input cannot be automated.
+- Window-relative playback identifies windows by saved process, title, and class information; highly dynamic titles may require selecting the target again.
+- Physical multi-monitor and IME scenarios still require manual validation on the intended machine.
 
-## 수동 승인 테스트 목록
+## Privacy
 
-1. 메모장에서 영문/숫자/한글, Enter/Tab/Backspace/화살표, Ctrl+A/C/V와 Shift 조합을 녹화하고 100회 재생합니다.
-2. 빠른 연속 키 입력과 클릭·드래그·휠을 녹화한 뒤 순서와 누락을 확인합니다.
-3. 무한 반복 중 `Ctrl+Alt+F12`를 눌러 즉시 중지되고 Ctrl/Alt/Shift 및 마우스 버튼이 남지 않는지 확인합니다.
-4. 음수 좌표를 사용하는 멀티 모니터 및 125%/150% DPI에서 클릭 위치를 확인합니다.
-5. 대상 창을 이동한 뒤 창 상대 좌표 모드가 같은 내부 위치를 클릭하는지, 창이 없으면 안내하는지 확인합니다.
-6. 관리자 권한 프로그램에서 **관리자 재실행** 전후 동작을 확인하고, 저장 매크로를 프로그램 재시작 후 불러옵니다.
-
-## 알려진 제한사항
-
-- Windows 보안 데스크톱(UAC 승인 창, 잠금 화면), DRM/게임의 차단된 입력, 더 높은 무결성 수준의 앱에는 `SendInput`이 동작하지 않을 수 있습니다.
-- 대상 창 식별은 창 제목·프로세스·창 클래스를 함께 사용합니다. 같은 제목의 창이 자주 바뀌는 앱은 재생 전에 다시 대상 창을 선택하는 편이 안전합니다.
-- 한글 IME 조합 상태는 Windows IME와 대상 프로그램 상태에 의존합니다. 키 이벤트는 보존하지만 조합 결과가 완전히 같으려면 같은 입력기 상태에서 재생해야 합니다.
+Recording begins only after an explicit button or hotkey action. Macro data is stored locally, and logs never contain typed strings.
