@@ -93,14 +93,25 @@ public partial class MainWindow : Window
         var simple = EasyModeBox.IsChecked == true;
         var advancedVisibility = simple ? Visibility.Collapsed : Visibility.Visible;
         AdvancedActionsPanel.Visibility = advancedVisibility;
+        AdvancedDivider.Visibility = advancedVisibility;
         AdvancedSettingsPanel.Visibility = advancedVisibility;
         CoordinatePanel.Visibility = advancedVisibility;
         AdvancedWorkspace.Visibility = advancedVisibility;
         AdvancedFooter.Visibility = advancedVisibility;
         AdvancedRow.Height = new GridLength(simple ? 0 : 1, simple ? GridUnitType.Pixel : GridUnitType.Star);
         FooterRow.Height = new GridLength(simple ? 0 : 1, simple ? GridUnitType.Pixel : GridUnitType.Auto);
-        if (simple) Height = 340;
-        else if (Height < 620) Height = 720;
+        if (simple)
+        {
+            MinWidth = 760; MinHeight = 320;
+            if (Width < 760) Width = 850;
+            Height = 340;
+        }
+        else
+        {
+            MinWidth = 1050; MinHeight = 700;
+            if (Width < 1050) Width = 1120;
+            if (Height < 700) Height = 760;
+        }
     }
     private async Task BeginRecordingAsync()
     {
@@ -113,7 +124,7 @@ public partial class MainWindow : Window
         catch (OperationCanceledException) { return; }
         finally { if (ReferenceEquals(_countdownCancel, countdown)) { _countingDown = false; _countdownCancel = null; } countdown.Dispose(); }
         _events.Clear(); _saveDialogActiveDuringRecording = false; _recordWatch.Restart(); _hook.StartRecording(); _recording = true;
-        StatusText.Text = "상태: ● 녹화 중"; StatusText.Foreground = System.Windows.Media.Brushes.Crimson; DetailText.Text = "트레이 아이콘에도 녹화 중 상태가 표시됩니다. F8 또는 정지로 종료"; _tray.Text = "MuMiClick - 녹화 중"; UpdateControls();
+        StatusText.Text = "상태: ● 녹화 중"; StatusText.Foreground = (System.Windows.Media.Brush)FindResource("StatusRecordingBrush"); DetailText.Text = "트레이 아이콘에도 녹화 중 상태가 표시됩니다. F8 또는 정지로 종료"; _tray.Text = "MuMiClick - 녹화 중"; UpdateControls();
     }
     private void StopRecording()
     {
@@ -147,7 +158,7 @@ public partial class MainWindow : Window
         if (!int.TryParse(IntervalBox.Text, out var interval) || interval < 0) { WpfMessageBox.Show("반복 간격은 0 이상의 밀리초입니다."); return; }
         var speed = double.Parse(((System.Windows.Controls.ComboBoxItem)SpeedBox.SelectedItem).Content!.ToString()![..^1], System.Globalization.CultureInfo.InvariantCulture);
         var doc = new MacroDocument { Events = _events.ToList(), CoordinateMode = TargetRadio.IsChecked == true ? CoordinateMode.TargetWindow : CoordinateMode.AbsoluteScreen, TargetWindow = _target };
-        StatusText.Foreground = System.Windows.Media.Brushes.DarkGreen; StatusText.Text = "상태: 재생 준비"; _tray.Text = "MuMiClick - 재생 중"; UpdateControls();
+        StatusText.Foreground = (System.Windows.Media.Brush)FindResource("StatusPlayingBrush"); StatusText.Text = "상태: 재생 준비"; _tray.Text = "MuMiClick - 재생 중"; UpdateControls();
         var instantMouseDelay = int.TryParse(InstantMouseDelayBox.Text, out var parsedMouseDelay) ? Math.Clamp(parsedMouseDelay, 0, 500) : 30;
         await _player.PlayAsync(doc, repeat, infinite, speed, interval, InstantMouseBox.IsChecked == true, instantMouseDelay, _lifetime.Token);
     }
@@ -163,7 +174,7 @@ public partial class MainWindow : Window
     private void StopPlayback() { if (_player.IsPlaying) _player.Stop(); else _player.ReleaseAll(); }
     private void SetIdle(string message)
     {
-        StatusText.Text = "상태: 대기"; StatusText.Foreground = System.Windows.Media.Brushes.Black; DetailText.Text = message; _tray.Text = "MuMiClick - 대기"; if (!_recording) ElapsedText.Text = "00:00.0";
+        StatusText.Text = "상태: 대기"; StatusText.Foreground = (System.Windows.Media.Brush)FindResource("StatusIdleBrush"); DetailText.Text = message; _tray.Text = "MuMiClick - 대기"; if (!_recording) ElapsedText.Text = "00:00.0";
     }
     private void UpdateControls()
     {
