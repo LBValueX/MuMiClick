@@ -137,7 +137,15 @@ public partial class MainWindow : Window
         StatusText.Foreground = System.Windows.Media.Brushes.DarkGreen; StatusText.Text = "상태: 재생 준비"; _tray.Text = "MuMiClick - 재생 중"; UpdateControls();
         await _player.PlayAsync(doc, repeat, infinite, speed, interval, _lifetime.Token);
     }
-    private void TogglePause() { _player.TogglePause(); if (_player.IsPlaying) { DetailText.Text = "일시정지/재개 전환"; } }
+    private void TogglePause()
+    {
+        _player.TogglePause();
+        if (_player.IsPlaying)
+        {
+            DetailText.Text = _player.IsPaused ? "일시정지됨 — F11을 누르면 재개합니다." : "재생을 재개했습니다.";
+            StatusText.Text = _player.IsPaused ? "상태: 일시정지" : "상태: 재생 중";
+        }
+    }
     private void StopPlayback() { if (_player.IsPlaying) _player.Stop(); else _player.ReleaseAll(); }
     private void SetIdle(string message)
     {

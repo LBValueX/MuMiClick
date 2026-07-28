@@ -7,10 +7,12 @@ internal sealed class MacroPlayer
     private readonly HashSet<uint> _keys = [];
     private readonly HashSet<MouseButtonKind> _buttons = [];
     private CancellationTokenSource? _cancel;
-    private readonly ManualResetEventSlim _pauseGate = new(true);
+    private readonly object _pauseSync = new();
+    private TaskCompletionSource<bool> _resumeSignal = CompletedSignal();
     private Stopwatch? _activeClock;
     private volatile bool _paused;
     public bool IsPlaying => _cancel is not null;
+    public bool IsPaused => _paused;
     public event Action<long, long, double>? Progress;
     public event Action<string>? Completed;
 
@@ -33,26 +35,26 @@ internal sealed class MacroPlayer
             for (long loop = 1; infinite || loop <= count; loop++)
             {
                 await PlayOnce(doc.Events, target, speed, loop, infinite ? long.MaxValue : count, end, ct);
-                if ((infinite || loop < count) && intervalMs > 0) await Task.Delay(intervalMs, ct);
+                if ((infinite || loop < count) && intervalMs > 0) await DelayWithPauseAsync(intervalMs, ct);
                 if (infinite && loop == long.MaxValue) loop = 0;
             }
             Completed?.Invoke("재생 완료");
         }
         catch (OperationCanceledException) { Completed?.Invoke("재생 중지됨"); }
         catch (Exception ex) { Completed?.Invoke("재생 오류: " + ex.Message); }
-        finally { ReleaseAll(); _activeClock = null; _cancel?.Dispose(); _cancel = null; _paused = false; _pauseGate.Set(); }
+        finally { ReleaseAll(); ResumeWaiters(); _activeClock = null; _cancel?.Dispose(); _cancel = null; }
     }
     private async Task PlayOnce(IReadOnlyList<MacroEvent> events, IntPtr target, double speed, long loop, long total, long end, CancellationToken ct)
     {
         var sw = Stopwatch.StartNew(); _activeClock = sw;
         foreach (var e in events)
         {
-            ct.ThrowIfCancellationRequested(); _pauseGate.Wait(ct);
+            ct.ThrowIfCancellationRequested(); await WaitWhilePausedAsync(ct);
             long due = (long)(e.TimeMs / Math.Max(0.05, speed));
             while (true)
             {
                 long remain = due - sw.ElapsedMilliseconds; if (remain <= 0) break;
-                await Task.Delay((int)Math.Min(remain, 15), ct); _pauseGate.Wait(ct);
+                await Task.Delay((int)Math.Min(remain, 15), ct); await WaitWhilePausedAsync(ct);
             }
             Send(e, target); Progress?.Invoke(loop, total, Math.Min(1, e.TimeMs / (double)end));
         }
@@ -60,11 +62,65 @@ internal sealed class MacroPlayer
     public void TogglePause()
     {
         if (!IsPlaying) return;
-        _paused = !_paused;
-        if (_paused) { _activeClock?.Stop(); _pauseGate.Reset(); }
-        else { _activeClock?.Start(); _pauseGate.Set(); }
+        TaskCompletionSource<bool>? signal = null;
+        lock (_pauseSync)
+        {
+            if (!_paused)
+            {
+                _paused = true;
+                _activeClock?.Stop();
+                _resumeSignal = new(TaskCreationOptions.RunContinuationsAsynchronously);
+            }
+            else
+            {
+                _paused = false;
+                _activeClock?.Start();
+                signal = _resumeSignal;
+            }
+        }
+        signal?.TrySetResult(true);
     }
-    public void Stop() { _cancel?.Cancel(); _pauseGate.Set(); ReleaseAll(); }
+    public void Stop() { _cancel?.Cancel(); ResumeWaiters(); ReleaseAll(); }
+    private async Task WaitWhilePausedAsync(CancellationToken ct)
+    {
+        while (true)
+        {
+            Task waiter;
+            lock (_pauseSync)
+            {
+                if (!_paused) return;
+                waiter = _resumeSignal.Task;
+            }
+            await waiter.WaitAsync(ct);
+        }
+    }
+    private async Task DelayWithPauseAsync(int delayMs, CancellationToken ct)
+    {
+        var sw = Stopwatch.StartNew(); _activeClock = sw;
+        while (sw.ElapsedMilliseconds < delayMs)
+        {
+            await WaitWhilePausedAsync(ct);
+            var remaining = delayMs - sw.ElapsedMilliseconds;
+            if (remaining > 0) await Task.Delay((int)Math.Min(remaining, 15), ct);
+        }
+    }
+    private void ResumeWaiters()
+    {
+        TaskCompletionSource<bool> signal;
+        lock (_pauseSync)
+        {
+            _paused = false;
+            _activeClock?.Start();
+            signal = _resumeSignal;
+        }
+        signal.TrySetResult(true);
+    }
+    private static TaskCompletionSource<bool> CompletedSignal()
+    {
+        var signal = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
+        signal.SetResult(true);
+        return signal;
+    }
     private void Send(MacroEvent e, IntPtr target)
     {
         int x = e.X, y = e.Y; if (target != IntPtr.Zero && e.Kind is MacroEventKind.MouseMove or MacroEventKind.MouseDown or MacroEventKind.MouseUp or MacroEventKind.MouseWheel) (x, y) = WindowLocator.ToScreen(target, x, y);
