@@ -58,6 +58,23 @@ Consecutive mouse-move events are collapsed into one row to keep recordings read
 
 Grouping changes only how the list is displayed. Saved macro data and playback timing retain the original movement events.
 
+## Variables and clipboard events
+
+Use **Variables** above the event list to define reusable name/value pairs. Select the position where the value is needed, choose **Set clipboard**, and select a variable. During playback MuMiClick places that value on the Windows clipboard; record or place `Ctrl+V` immediately after it to paste the value into the active field.
+
+Variables and clipboard events are stored inside the `.mumacro` file. Clipboard access is retried briefly when another application has it locked, and actual values are never written to logs.
+
+## Random action bundles
+
+**Random branch** groups actions already present in the current recording; it does not load another macro file.
+
+1. Click **Random branch** and select mouse moves, clicks, or key events on the left. Shift-click selects a range.
+2. Choose **Selection → Add branch** to make the first action bundle.
+3. Select another set of current events and add at least one more bundle.
+4. Apply the editor. The source actions are replaced by one random-branch row.
+
+Each time playback reaches that row, exactly one bundle is selected uniformly at random. The original event order and relative timing inside the selected bundle are preserved. Select the random-branch row and open **Random branch** again to rename or edit its alternatives.
+
 ## Save As dialog stabilization
 
 Enable **Wait for Save As dialog** in advanced mode when a recorded workflow opens a slow browser or file-save dialog. MuMiClick records a wait marker and pauses playback until the dialog and its input controls are ready. The timeout is configurable from 1 to 60 seconds and defaults to 15 seconds.
@@ -102,7 +119,7 @@ dotnet publish src\MuMiClick\MuMiClick.csproj -c Release -p:PublishProfile=Porta
 dotnet run --project tests\MuMiClick.SmokeTests\MuMiClick.SmokeTests.csproj -c Release
 ```
 
-The smoke suite covers safe defaults, language selection, single-key hotkey parsing, JSON round trips, KeyDown/KeyUp preservation, Save-dialog wait events, timestamp ordering, and mouse-movement display grouping.
+The smoke suite covers safe defaults, language selection, single-key hotkey parsing, JSON round trips, KeyDown/KeyUp preservation, Save-dialog wait events, timestamp ordering, mouse-movement display grouping, variables, clipboard events, random action bundles, branch selection, and the new editor windows.
 
 ## Known limitations
 

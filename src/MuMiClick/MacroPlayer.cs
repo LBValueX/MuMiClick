@@ -1,4 +1,5 @@
 using System.Diagnostics;
+using System.Runtime.InteropServices;
 
 namespace MuMiClick;
 
@@ -34,7 +35,7 @@ internal sealed class MacroPlayer
             var end = Math.Max(1, doc.Events[^1].TimeMs);
             for (long loop = 1; infinite || loop <= count; loop++)
             {
-                await PlayOnce(doc.Events, target, speed, loop, infinite ? long.MaxValue : count, end, instantMouseMovement, Math.Clamp(instantMouseDelayMs, 0, 500), ct);
+                await PlayOnce(doc.Events, target, doc.Variables ?? [], speed, loop, infinite ? long.MaxValue : count, end, instantMouseMovement, Math.Clamp(instantMouseDelayMs, 0, 500), ct);
                 if ((infinite || loop < count) && intervalMs > 0) await DelayWithPauseAsync(intervalMs, ct);
                 if (infinite && loop == long.MaxValue) loop = 0;
             }
@@ -44,41 +45,98 @@ internal sealed class MacroPlayer
         catch (Exception ex) { Completed?.Invoke(LocalizationService.F("PlaybackErrorFormat", ex.Message)); }
         finally { ReleaseAll(); ResumeWaiters(); _activeClock = null; _cancel?.Dispose(); _cancel = null; }
     }
-    private async Task PlayOnce(IReadOnlyList<MacroEvent> events, IntPtr target, double speed, long loop, long total, long end, bool instantMouseMovement, int instantMouseDelayMs, CancellationToken ct)
+    private async Task PlayOnce(IReadOnlyList<MacroEvent> events, IntPtr target, IReadOnlyDictionary<string, string> variables, double speed, long loop, long total, long end, bool instantMouseMovement, int instantMouseDelayMs, CancellationToken ct)
     {
+        await PlaySequenceAsync(events, target, variables, speed, instantMouseMovement, instantMouseDelayMs, ct,
+            e => Progress?.Invoke(loop, total, Math.Min(1, e.TimeMs / (double)end)));
+    }
+    private async Task PlaySequenceAsync(IReadOnlyList<MacroEvent> events, IntPtr target, IReadOnlyDictionary<string, string> variables,
+        double speed, bool instantMouseMovement, int instantMouseDelayMs, CancellationToken ct, Action<MacroEvent>? afterEvent = null)
+    {
+        var previousClock = _activeClock;
         var sw = Stopwatch.StartNew(); _activeClock = sw;
         long externalWaitOffset = 0;
         long compressedPlaybackMs = 0;
         long skippedMovementStartedAt = -1;
-        foreach (var e in events)
+        try
         {
-            ct.ThrowIfCancellationRequested(); await WaitWhilePausedAsync(ct);
-            if (instantMouseMovement && e.Kind == MacroEventKind.MouseMove)
+            foreach (var e in events)
             {
-                if (skippedMovementStartedAt < 0) skippedMovementStartedAt = e.TimeMs;
-                continue;
+                ct.ThrowIfCancellationRequested(); await WaitWhilePausedAsync(ct);
+                if (instantMouseMovement && e.Kind == MacroEventKind.MouseMove)
+                {
+                    if (skippedMovementStartedAt < 0) skippedMovementStartedAt = e.TimeMs;
+                    continue;
+                }
+                if (instantMouseMovement && skippedMovementStartedAt >= 0)
+                {
+                    var recordedMovementPlaybackMs = (long)(Math.Max(0, e.TimeMs - skippedMovementStartedAt) / Math.Max(0.05, speed));
+                    compressedPlaybackMs += Math.Max(0, recordedMovementPlaybackMs - instantMouseDelayMs);
+                    skippedMovementStartedAt = -1;
+                }
+                long due = (long)(e.TimeMs / Math.Max(0.05, speed)) - compressedPlaybackMs + externalWaitOffset;
+                while (true)
+                {
+                    long remain = due - sw.ElapsedMilliseconds; if (remain <= 0) break;
+                    await Task.Delay((int)Math.Min(remain, 15), ct); await WaitWhilePausedAsync(ct);
+                }
+                if (e.Kind == MacroEventKind.WaitForSaveDialog)
+                {
+                    var waitStarted = sw.ElapsedMilliseconds;
+                    await WindowLocator.WaitForSaveDialogAsync(e.TimeoutMs <= 0 ? 15000 : e.TimeoutMs, ct);
+                    externalWaitOffset += sw.ElapsedMilliseconds - waitStarted;
+                }
+                else if (e.Kind == MacroEventKind.SetClipboardVariable) await SetClipboardVariableAsync(e.VariableName, variables, ct);
+                else if (e.Kind == MacroEventKind.RandomBranch) await PlayRandomBranchAsync(e.Branches, variables, speed, instantMouseMovement, instantMouseDelayMs, ct);
+                else Send(e, target);
+                afterEvent?.Invoke(e);
             }
-            if (instantMouseMovement && skippedMovementStartedAt >= 0)
-            {
-                var recordedMovementPlaybackMs = (long)(Math.Max(0, e.TimeMs - skippedMovementStartedAt) / Math.Max(0.05, speed));
-                compressedPlaybackMs += Math.Max(0, recordedMovementPlaybackMs - instantMouseDelayMs);
-                skippedMovementStartedAt = -1;
-            }
-            long due = (long)(e.TimeMs / Math.Max(0.05, speed)) - compressedPlaybackMs + externalWaitOffset;
-            while (true)
-            {
-                long remain = due - sw.ElapsedMilliseconds; if (remain <= 0) break;
-                await Task.Delay((int)Math.Min(remain, 15), ct); await WaitWhilePausedAsync(ct);
-            }
-            if (e.Kind == MacroEventKind.WaitForSaveDialog)
-            {
-                var waitStarted = sw.ElapsedMilliseconds;
-                await WindowLocator.WaitForSaveDialogAsync(e.TimeoutMs <= 0 ? 15000 : e.TimeoutMs, ct);
-                externalWaitOffset += sw.ElapsedMilliseconds - waitStarted;
-            }
-            else Send(e, target);
-            Progress?.Invoke(loop, total, Math.Min(1, e.TimeMs / (double)end));
         }
+        finally { sw.Stop(); _activeClock = previousClock; }
+    }
+    internal static MacroBranch? ChooseBranch(IReadOnlyList<MacroBranch>? branches, Random? random = null)
+    {
+        if (branches is null || branches.Count == 0) return null;
+        return branches[(random ?? Random.Shared).Next(branches.Count)];
+    }
+    private async Task PlayRandomBranchAsync(IReadOnlyList<MacroBranch>? branches, IReadOnlyDictionary<string, string> parentVariables,
+        double speed, bool instantMouseMovement, int instantMouseDelayMs, CancellationToken ct)
+    {
+        var branch = ChooseBranch(branches) ?? throw new InvalidOperationException(LocalizationService.T("NeedTwoBranches"));
+        var parentClock = _activeClock;
+        parentClock?.Stop();
+        try
+        {
+            IntPtr target = IntPtr.Zero;
+            if (branch.CoordinateMode == CoordinateMode.TargetWindow)
+            {
+                if (branch.TargetWindow is null || (target = WindowLocator.Find(branch.TargetWindow)) == IntPtr.Zero)
+                    throw new InvalidOperationException(LocalizationService.T("TargetWindowMissing"));
+                NativeMethods.SetForegroundWindow(target);
+                await Task.Delay(120, ct);
+            }
+            var variables = new Dictionary<string, string>(parentVariables, StringComparer.OrdinalIgnoreCase);
+            foreach (var pair in branch.Variables ?? []) variables[pair.Key] = pair.Value;
+            await PlaySequenceAsync(branch.Events, target, variables, speed, instantMouseMovement, instantMouseDelayMs, ct);
+        }
+        finally
+        {
+            _activeClock = parentClock;
+            if (!_paused) parentClock?.Start();
+        }
+    }
+    private static async Task SetClipboardVariableAsync(string? variableName, IReadOnlyDictionary<string, string> variables, CancellationToken ct)
+    {
+        if (string.IsNullOrWhiteSpace(variableName) || !variables.TryGetValue(variableName, out var value))
+            throw new InvalidOperationException(LocalizationService.F("VariableMissingFormat", variableName ?? ""));
+        for (var attempt = 0; attempt < 8; attempt++)
+        {
+            ct.ThrowIfCancellationRequested();
+            try { System.Windows.Clipboard.SetText(value ?? ""); return; }
+            catch (COMException) when (attempt < 7) { await Task.Delay(25, ct); }
+            catch (ExternalException) when (attempt < 7) { await Task.Delay(25, ct); }
+        }
+        throw new InvalidOperationException(LocalizationService.T("ClipboardBusy"));
     }
     public void TogglePause()
     {

@@ -2,7 +2,7 @@ using System.Text.Json.Serialization;
 
 namespace MuMiClick;
 
-public enum MacroEventKind { MouseMove, MouseDown, MouseUp, MouseWheel, KeyDown, KeyUp, WaitForSaveDialog }
+public enum MacroEventKind { MouseMove, MouseDown, MouseUp, MouseWheel, KeyDown, KeyUp, WaitForSaveDialog, SetClipboardVariable, RandomBranch }
 public enum MouseButtonKind { Left, Right, Middle, X1, X2 }
 public enum CoordinateMode { AbsoluteScreen, TargetWindow }
 
@@ -18,6 +18,8 @@ public sealed class MacroEvent
     public uint ScanCode { get; set; }
     public bool Extended { get; set; }
     public int TimeoutMs { get; set; }
+    public string? VariableName { get; set; }
+    public List<MacroBranch>? Branches { get; set; }
     [JsonIgnore] public string Display => $"{TimeMs,7} ms  {KindName(),-14} {Describe()}";
     private string KindName() => Kind switch
     {
@@ -28,6 +30,8 @@ public sealed class MacroEvent
         MacroEventKind.KeyDown => LocalizationService.T("KeyDown"),
         MacroEventKind.KeyUp => LocalizationService.T("KeyUp"),
         MacroEventKind.WaitForSaveDialog => LocalizationService.T("WaitForSaveDialog"),
+        MacroEventKind.SetClipboardVariable => LocalizationService.T("SetClipboardVariable"),
+        MacroEventKind.RandomBranch => LocalizationService.T("RandomBranch"),
         _ => Kind.ToString()
     };
     private string Describe() => Kind switch
@@ -36,8 +40,27 @@ public sealed class MacroEvent
         MacroEventKind.MouseDown or MacroEventKind.MouseUp => $"{Button} ({X}, {Y})",
         MacroEventKind.MouseWheel => $"{Delta} ({X}, {Y})",
         MacroEventKind.WaitForSaveDialog => $"{LocalizationService.T("Maximum")} {Math.Max(1, TimeoutMs / 1000)} {LocalizationService.T("Second")}",
+        MacroEventKind.SetClipboardVariable => VariableName ?? LocalizationService.T("VariableNotSelected"),
+        MacroEventKind.RandomBranch => LocalizationService.F("BranchCountFormat", Branches?.Count ?? 0),
         _ => $"VK {VirtualKey} / Scan {ScanCode}" + (Extended ? $" ({LocalizationService.T("ExtendedKey")})" : "")
     };
+}
+
+public sealed class MacroVariable
+{
+    public string Name { get; set; } = "";
+    public string Value { get; set; } = "";
+}
+
+public sealed class MacroBranch
+{
+    public string Name { get; set; } = "";
+    public CoordinateMode CoordinateMode { get; set; }
+    public TargetWindowInfo? TargetWindow { get; set; }
+    public Dictionary<string, string> Variables { get; set; } = new(StringComparer.OrdinalIgnoreCase);
+    public List<MacroEvent> Events { get; set; } = [];
+    [JsonIgnore] public string Display => LocalizationService.F("BranchDisplayFormat", Name, Events.Count);
+    public override string ToString() => Display;
 }
 
 public sealed class TargetWindowInfo
@@ -51,12 +74,15 @@ public sealed class TargetWindowInfo
 
 public sealed class MacroDocument
 {
-    public int FormatVersion { get; set; } = 1;
+    public const int CurrentFormatVersion = 2;
+    public int FormatVersion { get; set; } = CurrentFormatVersion;
     public string Name { get; set; } = "새 매크로";
     public DateTime CreatedUtc { get; set; } = DateTime.UtcNow;
     public CoordinateMode CoordinateMode { get; set; }
     public TargetWindowInfo? TargetWindow { get; set; }
+    public Dictionary<string, string> Variables { get; set; } = new(StringComparer.OrdinalIgnoreCase);
     public List<MacroEvent> Events { get; set; } = [];
+    public static bool IsSupportedFormatVersion(int version) => version is 1 or CurrentFormatVersion;
 }
 
 public sealed class UserSettings

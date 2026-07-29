@@ -216,11 +216,14 @@
           <Grid DockPanel.Dock="Top" Margin="2,0,2,12">
             <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
             <StackPanel><TextBlock Text="{DynamicResource RecordedEvents}" FontSize="16" FontWeight="Bold" Foreground="{DynamicResource TextBrush}"/><TextBlock Text="{DynamicResource EventHelp}" Margin="0,3,0,0" Foreground="{DynamicResource MutedBrush}" FontSize="12"/></StackPanel>
-            <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
+            <WrapPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
+              <Button Click="Variables_Click" Style="{StaticResource CompactButton}" Content="{DynamicResource VariablesButton}"/>
+              <Button Click="InsertClipboardVariable_Click" Style="{StaticResource CompactButton}" Content="{DynamicResource InsertClipboardVariable}"/>
+              <Button Click="RandomBranch_Click" Style="{StaticResource CompactButton}" Content="{DynamicResource RandomBranchButton}"/>
               <Button x:Name="ToggleMovesButton" Click="ToggleMouseGroups_Click" Style="{StaticResource CompactButton}" Content="{DynamicResource ExpandMouseMoves}"/>
               <Button Click="InsertSaveWait_Click" Style="{StaticResource CompactButton}" Content="{DynamicResource InsertSaveWait}"/>
               <Button Click="DeleteEvent_Click" Style="{StaticResource CompactButton}" Margin="0" Content="{DynamicResource DeleteSelected}"/>
-            </StackPanel>
+            </WrapPanel>
           </Grid>
           <ListBox x:Name="EventList" SelectionMode="Extended" KeyDown="EventList_KeyDown" BorderThickness="1" BorderBrush="{DynamicResource LineBrush}" Background="{DynamicResource ListBrush}" Foreground="{DynamicResource TextBrush}" Padding="6" FontFamily="Consolas">
             <ListBox.ItemTemplate>
