@@ -60,7 +60,14 @@ Grouping changes only how the list is displayed. Saved macro data and playback t
 
 ## Variables and clipboard events
 
-Use **Variables** above the event list to define reusable name/value pairs. Select the position where the value is needed, choose **Set clipboard**, and select a variable. During playback MuMiClick places that value on the Windows clipboard; record or place `Ctrl+V` immediately after it to paste the value into the active field.
+Use **Variables** above the event list to define reusable name/value pairs. The optional **Group** column combines variables that should be used as one random pool; enter the same group name on each member.
+
+Select the position where the value is needed and choose **Set clipboard**. The event dialog supports two modes:
+
+- **Use one fixed variable** always places the selected variable on the clipboard.
+- **Choose randomly from a variable group** independently and uniformly selects one group member each time the event is played.
+
+Record or place `Ctrl+V` immediately after the clipboard event to paste the selected value into the active field.
 
 Variables and clipboard events are stored inside the `.mumacro` file. Clipboard access is retried briefly when another application has it locked, and actual values are never written to logs.
 
@@ -119,7 +126,7 @@ dotnet publish src\MuMiClick\MuMiClick.csproj -c Release -p:PublishProfile=Porta
 dotnet run --project tests\MuMiClick.SmokeTests\MuMiClick.SmokeTests.csproj -c Release
 ```
 
-The smoke suite covers safe defaults, language selection, single-key hotkey parsing, JSON round trips, KeyDown/KeyUp preservation, Save-dialog wait events, timestamp ordering, mouse-movement display grouping, variables, clipboard events, random action bundles, branch selection, and the new editor windows.
+The smoke suite covers safe defaults, language selection, single-key hotkey parsing, JSON round trips, KeyDown/KeyUp preservation, Save-dialog wait events, timestamp ordering, mouse-movement display grouping, variable groups, fixed and random clipboard events, random action bundles, branch selection, and the editor windows.
 
 ## Known limitations
 

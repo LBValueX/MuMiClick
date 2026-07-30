@@ -16,7 +16,8 @@ Check(restored.Events[2].Kind == MacroEventKind.WaitForSaveDialog && restored.Ev
 Check(restored.Events.SequenceEqual(restored.Events.OrderBy(e => e.TimeMs)), "재생용 타임스탬프 정렬");
 var workflowDoc = new MacroDocument
 {
-    Variables = new(StringComparer.OrdinalIgnoreCase) { ["fileName"] = "sample-001.png" },
+    Variables = new(StringComparer.OrdinalIgnoreCase) { ["fileName"] = "sample-001.png", ["backupName"] = "sample-002.png" },
+    VariableGroups = new(StringComparer.OrdinalIgnoreCase) { ["imageNames"] = ["fileName", "backupName"] },
     Events =
     [
         new MacroEvent { TimeMs = 10, Kind = MacroEventKind.SetClipboardVariable, VariableName = "fileName" },
@@ -27,13 +28,18 @@ var workflowDoc = new MacroDocument
                 new MacroBranch { Name = "Left", Events = [new MacroEvent { TimeMs = 0, Kind = MacroEventKind.MouseDown, Button = MouseButtonKind.Left, X = 10, Y = 20 }] },
                 new MacroBranch { Name = "Right", Events = [new MacroEvent { TimeMs = 0, Kind = MacroEventKind.MouseDown, Button = MouseButtonKind.Right, X = 30, Y = 40 }] }
             ]
-        }
+        },
+        new MacroEvent { TimeMs = 30, Kind = MacroEventKind.SetClipboardVariable, RandomFromVariableGroup = true, VariableGroupName = "imageNames" }
     ]
 };
 var restoredWorkflow = JsonSerializer.Deserialize<MacroDocument>(JsonSerializer.Serialize(workflowDoc))!;
-Check(restoredWorkflow.FormatVersion == 2 && MacroDocument.IsSupportedFormatVersion(1), "format v2 save and v1 backward compatibility");
+Check(restoredWorkflow.FormatVersion == 3 && MacroDocument.IsSupportedFormatVersion(1) && MacroDocument.IsSupportedFormatVersion(2), "format v3 save and v1/v2 backward compatibility");
 Check(restoredWorkflow.Variables["fileName"] == "sample-001.png" && restoredWorkflow.Events[0].VariableName == "fileName", "variable and clipboard event JSON round trip");
 Check(restoredWorkflow.Events[1].Branches?.Count == 2 && restoredWorkflow.Events[1].Branches![0].Events.Count == 1, "random action bundles JSON round trip");
+Check(restoredWorkflow.VariableGroups["imageNames"].Count == 2 && restoredWorkflow.Events[2].RandomFromVariableGroup, "variable group and random clipboard event JSON round trip");
+var variableRandom = new Random(1234);
+var randomVariableChoices = Enumerable.Range(0, 100).Select(_ => MacroPlayer.ChooseVariableName(restoredWorkflow.Events[2], restoredWorkflow.Variables, restoredWorkflow.VariableGroups, variableRandom)).ToHashSet();
+Check(randomVariableChoices.SetEquals(new[] { "fileName", "backupName" }), "random clipboard selection uses every member of the selected group");
 var chosen = MacroPlayer.ChooseBranch(restoredWorkflow.Events[1].Branches, new Random(1234));
 Check(chosen is not null && restoredWorkflow.Events[1].Branches!.Contains(chosen), "random selection stays inside action bundles");
 var moveGroup = EventListItem.Group(new MacroEvent { Kind = MacroEventKind.MouseMove, X = 10, Y = 20 });
@@ -49,9 +55,12 @@ var localizationThread = new Thread(() =>
         Check(LocalizationService.T("SettingsTitle") == "MuMiClick Settings", "영문 UI 리소스 로드");
         var settingsWindow = new SettingsWindow(new UserSettings());
         Check(settingsWindow.Title == "MuMiClick Settings", "설정 팝업 XAML 생성");
-        var variablesWindow = new VariablesWindow(workflowDoc.Variables, true);
+        var variablesWindow = new VariablesWindow(workflowDoc.Variables, workflowDoc.VariableGroups, true);
         Check(variablesWindow.Title == "Macro Variables", "variable editor XAML construction");
         variablesWindow.Close();
+        var clipboardWindow = new ClipboardEventWindow(workflowDoc.Variables.Keys, workflowDoc.VariableGroups.Keys, true);
+        Check(clipboardWindow.Title == "Insert Clipboard Event", "clipboard event option window XAML construction");
+        clipboardWindow.Close();
         var branchSource = workflowDoc.Events[1].Branches![0].Events;
         var branchWindow = new RandomBranchWindow(branchSource, branchSource, restoredWorkflow.Events[1].Branches,
             CoordinateMode.AbsoluteScreen, null, true);

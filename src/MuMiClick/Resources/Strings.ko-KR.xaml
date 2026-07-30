@@ -41,8 +41,9 @@
   <sys:String x:Key="InsertClipboardVariable">클립보드 넣기</sys:String>
   <sys:String x:Key="RandomBranchButton">랜덤 갈래</sys:String>
   <sys:String x:Key="VariablesTitle">매크로 변수</sys:String>
-  <sys:String x:Key="VariablesHelp">이름과 값을 저장한 뒤 원하는 위치에 클립보드 이벤트를 삽입하세요.</sys:String>
+  <sys:String x:Key="VariablesHelp">이름과 값을 저장하고, 무작위로 고를 값에는 같은 그룹 이름을 입력하세요.</sys:String>
   <sys:String x:Key="VariableName">이름</sys:String>
+  <sys:String x:Key="VariableGroup">그룹 (선택)</sys:String>
   <sys:String x:Key="VariableValue">값</sys:String>
   <sys:String x:Key="AddVariable">변수 추가</sys:String>
   <sys:String x:Key="DeleteVariable">변수 삭제</sys:String>
@@ -51,6 +52,15 @@
   <sys:String x:Key="NoVariables">먼저 사용할 변수를 추가하세요.</sys:String>
   <sys:String x:Key="ChooseVariable">클립보드에 넣을 변수 선택</sys:String>
   <sys:String x:Key="VariableMissingFormat">변수 '{0}'을 찾을 수 없습니다.</sys:String>
+  <sys:String x:Key="ClipboardEventTitle">클립보드 이벤트 넣기</sys:String>
+  <sys:String x:Key="ClipboardEventHelp">고정 변수 하나를 사용하거나, 이 이벤트를 재생할 때마다 변수 그룹에서 값 하나를 무작위로 선택합니다.</sys:String>
+  <sys:String x:Key="FixedVariableMode">고정 변수 하나 사용</sys:String>
+  <sys:String x:Key="RandomVariableGroupMode">변수 그룹에서 무작위 선택</sys:String>
+  <sys:String x:Key="RandomVariableGroupHelp">같은 그룹 이름을 입력한 변수들이 하나의 후보 묶음이 됩니다. 재생할 때마다 서로 독립적으로 하나를 균등하게 선택합니다.</sys:String>
+  <sys:String x:Key="VariableGroupNotSelected">변수 그룹이 선택되지 않음</sys:String>
+  <sys:String x:Key="VariableGroupMissingFormat">변수 그룹 '{0}'이 비어 있거나 존재하지 않습니다.</sys:String>
+  <sys:String x:Key="RandomVariableGroupFormat">무작위 그룹: {0}</sys:String>
+  <sys:String x:Key="Insert">넣기</sys:String>
   <sys:String x:Key="ClipboardBusy">클립보드를 사용할 수 없습니다. 잠시 후 다시 시도하세요.</sys:String>
   <sys:String x:Key="RandomBranchesTitle">랜덤 갈래 편집</sys:String>
   <sys:String x:Key="RandomBranchesHelp">왼쪽에서 마우스 이동·클릭·키 입력을 Shift로 범위 선택하고 하나의 행동 다발로 추가하세요. 재생할 때마다 갈래 하나만 무작위로 실행합니다.</sys:String>

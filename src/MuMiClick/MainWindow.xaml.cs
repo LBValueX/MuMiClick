@@ -29,6 +29,7 @@ public partial class MainWindow : Window
     private UserSettings _settings = new();
     private TargetWindowInfo? _target;
     private Dictionary<string, string> _variables = new(StringComparer.OrdinalIgnoreCase);
+    private Dictionary<string, List<string>> _variableGroups = new(StringComparer.OrdinalIgnoreCase);
     private CancellationTokenSource? _countdownCancel;
     private bool _recording, _countingDown;
     private bool _saveDialogActiveDuringRecording;
@@ -164,7 +165,7 @@ public partial class MainWindow : Window
         if (!infinite && (!int.TryParse(RepeatBox.Text, out repeat) || repeat < 1 || repeat > 1000000)) { WpfMessageBox.Show(LocalizationService.T("RepeatRange")); return; }
         if (!int.TryParse(IntervalBox.Text, out var interval) || interval < 0) { WpfMessageBox.Show(LocalizationService.T("IntervalInvalid")); return; }
         var speed = double.Parse(((System.Windows.Controls.ComboBoxItem)SpeedBox.SelectedItem).Content!.ToString()![..^1], System.Globalization.CultureInfo.InvariantCulture);
-        var doc = new MacroDocument { Events = _events.ToList(), Variables = new(_variables, StringComparer.OrdinalIgnoreCase), CoordinateMode = TargetRadio.IsChecked == true ? CoordinateMode.TargetWindow : CoordinateMode.AbsoluteScreen, TargetWindow = _target };
+        var doc = new MacroDocument { Events = _events.ToList(), Variables = new(_variables, StringComparer.OrdinalIgnoreCase), VariableGroups = CloneVariableGroups(_variableGroups), CoordinateMode = TargetRadio.IsChecked == true ? CoordinateMode.TargetWindow : CoordinateMode.AbsoluteScreen, TargetWindow = _target };
         StatusText.Foreground = (System.Windows.Media.Brush)FindResource("StatusPlayingBrush"); StatusText.Text = LocalizationService.T("PlaybackReady"); _tray.Text = LocalizationService.T("TrayPlaying"); UpdateControls();
         var instantMouseDelay = int.TryParse(InstantMouseDelayBox.Text, out var parsedMouseDelay) ? Math.Clamp(parsedMouseDelay, 0, 500) : 30;
         await _player.PlayAsync(doc, repeat, infinite, speed, interval, InstantMouseBox.IsChecked == true, instantMouseDelay, _lifetime.Token);
@@ -304,8 +305,12 @@ public partial class MainWindow : Window
     }
     private void Variables_Click(object sender, RoutedEventArgs e)
     {
-        var dialog = new VariablesWindow(_variables, _settings.DarkMode) { Owner = this };
-        if (dialog.ShowDialog() == true) _variables = dialog.Variables;
+        var dialog = new VariablesWindow(_variables, _variableGroups, _settings.DarkMode) { Owner = this };
+        if (dialog.ShowDialog() == true)
+        {
+            _variables = dialog.Variables;
+            _variableGroups = dialog.VariableGroups;
+        }
     }
     private void InsertClipboardVariable_Click(object sender, RoutedEventArgs e)
     {
@@ -314,17 +319,15 @@ public partial class MainWindow : Window
             Variables_Click(sender, e);
             if (_variables.Count == 0) { WpfMessageBox.Show(this, LocalizationService.T("NoVariables")); return; }
         }
-        var list = new System.Windows.Controls.ListBox { ItemsSource = _variables.Keys.OrderBy(x => x).ToList(), MinWidth = 300, MinHeight = 180, Margin = new Thickness(14) };
-        list.SelectedIndex = 0;
-        var ok = new System.Windows.Controls.Button { Content = LocalizationService.T("Select"), IsDefault = true, MinWidth = 85, Margin = new Thickness(5) };
-        var cancel = new System.Windows.Controls.Button { Content = LocalizationService.T("Cancel"), IsCancel = true, MinWidth = 85, Margin = new Thickness(5) };
-        var actions = new System.Windows.Controls.StackPanel { Orientation = System.Windows.Controls.Orientation.Horizontal, HorizontalAlignment = System.Windows.HorizontalAlignment.Right, Margin = new Thickness(9, 0, 9, 9) };
-        actions.Children.Add(ok); actions.Children.Add(cancel);
-        var panel = new System.Windows.Controls.DockPanel(); System.Windows.Controls.DockPanel.SetDock(actions, System.Windows.Controls.Dock.Bottom); panel.Children.Add(actions); panel.Children.Add(list);
-        var dialog = new Window { Owner = this, Title = LocalizationService.T("ChooseVariable"), Content = panel, SizeToContent = SizeToContent.WidthAndHeight, WindowStartupLocation = WindowStartupLocation.CenterOwner };
-        ok.Click += (_, _) => dialog.DialogResult = list.SelectedItem is not null;
-        if (dialog.ShowDialog() != true || list.SelectedItem is not string variableName) return;
-        InsertEventAtSelection(new MacroEvent { Kind = MacroEventKind.SetClipboardVariable, VariableName = variableName });
+        var dialog = new ClipboardEventWindow(_variables.Keys, _variableGroups.Keys, _settings.DarkMode) { Owner = this };
+        if (dialog.ShowDialog() != true) return;
+        InsertEventAtSelection(new MacroEvent
+        {
+            Kind = MacroEventKind.SetClipboardVariable,
+            VariableName = dialog.VariableName,
+            RandomFromVariableGroup = dialog.RandomFromVariableGroup,
+            VariableGroupName = dialog.VariableGroupName
+        });
     }
     private void RandomBranch_Click(object sender, RoutedEventArgs e)
     {
@@ -366,13 +369,13 @@ public partial class MainWindow : Window
     {
         var dialog = new WpfSaveFileDialog { Filter = LocalizationService.T("MacroFilter"), FileName = "macro.mumacro" };
         if (dialog.ShowDialog() != true) return;
-        var doc = new MacroDocument { CoordinateMode = TargetRadio.IsChecked == true ? CoordinateMode.TargetWindow : CoordinateMode.AbsoluteScreen, TargetWindow = _target, Variables = new(_variables, StringComparer.OrdinalIgnoreCase), Events = _events.ToList() };
+        var doc = new MacroDocument { CoordinateMode = TargetRadio.IsChecked == true ? CoordinateMode.TargetWindow : CoordinateMode.AbsoluteScreen, TargetWindow = _target, Variables = new(_variables, StringComparer.OrdinalIgnoreCase), VariableGroups = CloneVariableGroups(_variableGroups), Events = _events.ToList() };
         File.WriteAllText(dialog.FileName, JsonSerializer.Serialize(doc, JsonOptions())); _settings.LastMacroPath = dialog.FileName; SaveSettings(_settings); SetIdle(LocalizationService.T("MacroSaved"));
     }
     private void Load_Click(object sender, RoutedEventArgs e)
     {
         var dialog = new WpfOpenFileDialog { Filter = LocalizationService.T("MacroOpenFilter") }; if (dialog.ShowDialog() != true) return;
-        try { var doc = JsonSerializer.Deserialize<MacroDocument>(File.ReadAllText(dialog.FileName), JsonOptions()) ?? throw new InvalidDataException(); if (!MacroDocument.IsSupportedFormatVersion(doc.FormatVersion)) throw new InvalidDataException(LocalizationService.T("UnsupportedFormat")); _events.Clear(); foreach (var x in doc.Events.OrderBy(x => x.TimeMs)) _events.Add(x); _variables = new(doc.Variables ?? [], StringComparer.OrdinalIgnoreCase); RebuildEventRows(); _target = doc.TargetWindow; AbsoluteRadio.IsChecked = doc.CoordinateMode == CoordinateMode.AbsoluteScreen; TargetRadio.IsChecked = doc.CoordinateMode == CoordinateMode.TargetWindow; UpdateTargetText(); _settings.LastMacroPath = dialog.FileName; SaveSettings(_settings); SetIdle(LocalizationService.T("MacroLoaded")); }
+        try { var doc = JsonSerializer.Deserialize<MacroDocument>(File.ReadAllText(dialog.FileName), JsonOptions()) ?? throw new InvalidDataException(); if (!MacroDocument.IsSupportedFormatVersion(doc.FormatVersion)) throw new InvalidDataException(LocalizationService.T("UnsupportedFormat")); _events.Clear(); foreach (var x in doc.Events.OrderBy(x => x.TimeMs)) _events.Add(x); _variables = new(doc.Variables ?? [], StringComparer.OrdinalIgnoreCase); _variableGroups = CloneVariableGroups(doc.VariableGroups ?? []); RebuildEventRows(); _target = doc.TargetWindow; AbsoluteRadio.IsChecked = doc.CoordinateMode == CoordinateMode.AbsoluteScreen; TargetRadio.IsChecked = doc.CoordinateMode == CoordinateMode.TargetWindow; UpdateTargetText(); _settings.LastMacroPath = dialog.FileName; SaveSettings(_settings); SetIdle(LocalizationService.T("MacroLoaded")); }
         catch (Exception ex) { WpfMessageBox.Show(LocalizationService.F("FileReadErrorFormat", ex.Message)); }
     }
     private void RestoreLastMacro()
@@ -385,6 +388,7 @@ public partial class MainWindow : Window
             _events.Clear();
             foreach (var x in doc.Events.OrderBy(x => x.TimeMs)) _events.Add(x);
             _variables = new(doc.Variables ?? [], StringComparer.OrdinalIgnoreCase);
+            _variableGroups = CloneVariableGroups(doc.VariableGroups ?? []);
             RebuildEventRows();
             _target = doc.TargetWindow;
             AbsoluteRadio.IsChecked = doc.CoordinateMode == CoordinateMode.AbsoluteScreen;
@@ -450,6 +454,8 @@ public partial class MainWindow : Window
         try { Process.Start(new ProcessStartInfo(Environment.ProcessPath!) { UseShellExecute = true, Verb = "runas" }); WpfApplication.Current.Shutdown(); } catch { SetIdle(LocalizationService.T("ElevateFailed")); }
     }
     private static JsonSerializerOptions JsonOptions() => new() { WriteIndented = true, PropertyNameCaseInsensitive = true };
+    private static Dictionary<string, List<string>> CloneVariableGroups(IReadOnlyDictionary<string, List<string>> groups) =>
+        groups.ToDictionary(x => x.Key, x => (x.Value ?? []).ToList(), StringComparer.OrdinalIgnoreCase);
     private static string SettingsPath => Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "MuMiClick", SettingsFileName);
     private static UserSettings LoadSettings()
     {

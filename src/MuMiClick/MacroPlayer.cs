@@ -35,7 +35,7 @@ internal sealed class MacroPlayer
             var end = Math.Max(1, doc.Events[^1].TimeMs);
             for (long loop = 1; infinite || loop <= count; loop++)
             {
-                await PlayOnce(doc.Events, target, doc.Variables ?? [], speed, loop, infinite ? long.MaxValue : count, end, instantMouseMovement, Math.Clamp(instantMouseDelayMs, 0, 500), ct);
+                await PlayOnce(doc.Events, target, doc.Variables ?? [], doc.VariableGroups ?? [], speed, loop, infinite ? long.MaxValue : count, end, instantMouseMovement, Math.Clamp(instantMouseDelayMs, 0, 500), ct);
                 if ((infinite || loop < count) && intervalMs > 0) await DelayWithPauseAsync(intervalMs, ct);
                 if (infinite && loop == long.MaxValue) loop = 0;
             }
@@ -45,13 +45,14 @@ internal sealed class MacroPlayer
         catch (Exception ex) { Completed?.Invoke(LocalizationService.F("PlaybackErrorFormat", ex.Message)); }
         finally { ReleaseAll(); ResumeWaiters(); _activeClock = null; _cancel?.Dispose(); _cancel = null; }
     }
-    private async Task PlayOnce(IReadOnlyList<MacroEvent> events, IntPtr target, IReadOnlyDictionary<string, string> variables, double speed, long loop, long total, long end, bool instantMouseMovement, int instantMouseDelayMs, CancellationToken ct)
+    private async Task PlayOnce(IReadOnlyList<MacroEvent> events, IntPtr target, IReadOnlyDictionary<string, string> variables,
+        IReadOnlyDictionary<string, List<string>> variableGroups, double speed, long loop, long total, long end, bool instantMouseMovement, int instantMouseDelayMs, CancellationToken ct)
     {
-        await PlaySequenceAsync(events, target, variables, speed, instantMouseMovement, instantMouseDelayMs, ct,
+        await PlaySequenceAsync(events, target, variables, variableGroups, speed, instantMouseMovement, instantMouseDelayMs, ct,
             e => Progress?.Invoke(loop, total, Math.Min(1, e.TimeMs / (double)end)));
     }
     private async Task PlaySequenceAsync(IReadOnlyList<MacroEvent> events, IntPtr target, IReadOnlyDictionary<string, string> variables,
-        double speed, bool instantMouseMovement, int instantMouseDelayMs, CancellationToken ct, Action<MacroEvent>? afterEvent = null)
+        IReadOnlyDictionary<string, List<string>> variableGroups, double speed, bool instantMouseMovement, int instantMouseDelayMs, CancellationToken ct, Action<MacroEvent>? afterEvent = null)
     {
         var previousClock = _activeClock;
         var sw = Stopwatch.StartNew(); _activeClock = sw;
@@ -86,8 +87,8 @@ internal sealed class MacroPlayer
                     await WindowLocator.WaitForSaveDialogAsync(e.TimeoutMs <= 0 ? 15000 : e.TimeoutMs, ct);
                     externalWaitOffset += sw.ElapsedMilliseconds - waitStarted;
                 }
-                else if (e.Kind == MacroEventKind.SetClipboardVariable) await SetClipboardVariableAsync(e.VariableName, variables, ct);
-                else if (e.Kind == MacroEventKind.RandomBranch) await PlayRandomBranchAsync(e.Branches, variables, speed, instantMouseMovement, instantMouseDelayMs, ct);
+                else if (e.Kind == MacroEventKind.SetClipboardVariable) await SetClipboardVariableAsync(e, variables, variableGroups, ct);
+                else if (e.Kind == MacroEventKind.RandomBranch) await PlayRandomBranchAsync(e.Branches, variables, variableGroups, speed, instantMouseMovement, instantMouseDelayMs, ct);
                 else Send(e, target);
                 afterEvent?.Invoke(e);
             }
@@ -100,7 +101,7 @@ internal sealed class MacroPlayer
         return branches[(random ?? Random.Shared).Next(branches.Count)];
     }
     private async Task PlayRandomBranchAsync(IReadOnlyList<MacroBranch>? branches, IReadOnlyDictionary<string, string> parentVariables,
-        double speed, bool instantMouseMovement, int instantMouseDelayMs, CancellationToken ct)
+        IReadOnlyDictionary<string, List<string>> variableGroups, double speed, bool instantMouseMovement, int instantMouseDelayMs, CancellationToken ct)
     {
         var branch = ChooseBranch(branches) ?? throw new InvalidOperationException(LocalizationService.T("NeedTwoBranches"));
         var parentClock = _activeClock;
@@ -117,7 +118,7 @@ internal sealed class MacroPlayer
             }
             var variables = new Dictionary<string, string>(parentVariables, StringComparer.OrdinalIgnoreCase);
             foreach (var pair in branch.Variables ?? []) variables[pair.Key] = pair.Value;
-            await PlaySequenceAsync(branch.Events, target, variables, speed, instantMouseMovement, instantMouseDelayMs, ct);
+            await PlaySequenceAsync(branch.Events, target, variables, variableGroups, speed, instantMouseMovement, instantMouseDelayMs, ct);
         }
         finally
         {
@@ -125,10 +126,27 @@ internal sealed class MacroPlayer
             if (!_paused) parentClock?.Start();
         }
     }
-    private static async Task SetClipboardVariableAsync(string? variableName, IReadOnlyDictionary<string, string> variables, CancellationToken ct)
+    internal static string? ChooseVariableName(MacroEvent e, IReadOnlyDictionary<string, string> variables,
+        IReadOnlyDictionary<string, List<string>> variableGroups, Random? random = null)
     {
+        if (!e.RandomFromVariableGroup) return e.VariableName;
+        if (string.IsNullOrWhiteSpace(e.VariableGroupName)) return null;
+        var group = variableGroups.FirstOrDefault(x => x.Key.Equals(e.VariableGroupName, StringComparison.OrdinalIgnoreCase));
+        if (group.Key is null || group.Value is null) return null;
+        var candidates = group.Value.Where(variables.ContainsKey).Distinct(StringComparer.OrdinalIgnoreCase).ToList();
+        if (candidates.Count == 0) return null;
+        return candidates[(random ?? Random.Shared).Next(candidates.Count)];
+    }
+    private static async Task SetClipboardVariableAsync(MacroEvent e, IReadOnlyDictionary<string, string> variables,
+        IReadOnlyDictionary<string, List<string>> variableGroups, CancellationToken ct)
+    {
+        var variableName = ChooseVariableName(e, variables, variableGroups);
         if (string.IsNullOrWhiteSpace(variableName) || !variables.TryGetValue(variableName, out var value))
+        {
+            if (e.RandomFromVariableGroup)
+                throw new InvalidOperationException(LocalizationService.F("VariableGroupMissingFormat", e.VariableGroupName ?? ""));
             throw new InvalidOperationException(LocalizationService.F("VariableMissingFormat", variableName ?? ""));
+        }
         for (var attempt = 0; attempt < 8; attempt++)
         {
             ct.ThrowIfCancellationRequested();

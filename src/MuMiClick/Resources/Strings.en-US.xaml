@@ -41,8 +41,9 @@
   <sys:String x:Key="InsertClipboardVariable">Set clipboard</sys:String>
   <sys:String x:Key="RandomBranchButton">Random branch</sys:String>
   <sys:String x:Key="VariablesTitle">Macro Variables</sys:String>
-  <sys:String x:Key="VariablesHelp">Save name/value pairs, then insert clipboard events at the desired positions.</sys:String>
+  <sys:String x:Key="VariablesHelp">Save name/value pairs and enter the same group name for values that should be chosen at random.</sys:String>
   <sys:String x:Key="VariableName">Name</sys:String>
+  <sys:String x:Key="VariableGroup">Group (optional)</sys:String>
   <sys:String x:Key="VariableValue">Value</sys:String>
   <sys:String x:Key="AddVariable">Add variable</sys:String>
   <sys:String x:Key="DeleteVariable">Delete variable</sys:String>
@@ -51,6 +52,15 @@
   <sys:String x:Key="NoVariables">Add a variable first.</sys:String>
   <sys:String x:Key="ChooseVariable">Choose a variable for the clipboard</sys:String>
   <sys:String x:Key="VariableMissingFormat">Variable '{0}' was not found.</sys:String>
+  <sys:String x:Key="ClipboardEventTitle">Insert Clipboard Event</sys:String>
+  <sys:String x:Key="ClipboardEventHelp">Choose one fixed variable or randomly select a value from a variable group each time this event is played.</sys:String>
+  <sys:String x:Key="FixedVariableMode">Use one fixed variable</sys:String>
+  <sys:String x:Key="RandomVariableGroupMode">Choose randomly from a variable group</sys:String>
+  <sys:String x:Key="RandomVariableGroupHelp">Variables with the same group name form one pool. Every playback selects one member independently and uniformly.</sys:String>
+  <sys:String x:Key="VariableGroupNotSelected">No variable group selected</sys:String>
+  <sys:String x:Key="VariableGroupMissingFormat">Variable group '{0}' is empty or unavailable.</sys:String>
+  <sys:String x:Key="RandomVariableGroupFormat">Random group: {0}</sys:String>
+  <sys:String x:Key="Insert">Insert</sys:String>
   <sys:String x:Key="ClipboardBusy">The clipboard is unavailable. Try again in a moment.</sys:String>
   <sys:String x:Key="RandomBranchesTitle">Edit Random Branches</sys:String>
   <sys:String x:Key="RandomBranchesHelp">Select mouse moves, clicks, and key events on the left with Shift, then add them as an action bundle. One branch is chosen randomly each time.</sys:String>

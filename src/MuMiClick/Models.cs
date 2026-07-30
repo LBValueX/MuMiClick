@@ -19,6 +19,8 @@ public sealed class MacroEvent
     public bool Extended { get; set; }
     public int TimeoutMs { get; set; }
     public string? VariableName { get; set; }
+    public bool RandomFromVariableGroup { get; set; }
+    public string? VariableGroupName { get; set; }
     public List<MacroBranch>? Branches { get; set; }
     [JsonIgnore] public string Display => $"{TimeMs,7} ms  {KindName(),-14} {Describe()}";
     private string KindName() => Kind switch
@@ -40,7 +42,9 @@ public sealed class MacroEvent
         MacroEventKind.MouseDown or MacroEventKind.MouseUp => $"{Button} ({X}, {Y})",
         MacroEventKind.MouseWheel => $"{Delta} ({X}, {Y})",
         MacroEventKind.WaitForSaveDialog => $"{LocalizationService.T("Maximum")} {Math.Max(1, TimeoutMs / 1000)} {LocalizationService.T("Second")}",
-        MacroEventKind.SetClipboardVariable => VariableName ?? LocalizationService.T("VariableNotSelected"),
+        MacroEventKind.SetClipboardVariable => RandomFromVariableGroup
+            ? LocalizationService.F("RandomVariableGroupFormat", VariableGroupName ?? LocalizationService.T("VariableGroupNotSelected"))
+            : VariableName ?? LocalizationService.T("VariableNotSelected"),
         MacroEventKind.RandomBranch => LocalizationService.F("BranchCountFormat", Branches?.Count ?? 0),
         _ => $"VK {VirtualKey} / Scan {ScanCode}" + (Extended ? $" ({LocalizationService.T("ExtendedKey")})" : "")
     };
@@ -50,6 +54,7 @@ public sealed class MacroVariable
 {
     public string Name { get; set; } = "";
     public string Value { get; set; } = "";
+    public string Group { get; set; } = "";
 }
 
 public sealed class MacroBranch
@@ -74,15 +79,16 @@ public sealed class TargetWindowInfo
 
 public sealed class MacroDocument
 {
-    public const int CurrentFormatVersion = 2;
+    public const int CurrentFormatVersion = 3;
     public int FormatVersion { get; set; } = CurrentFormatVersion;
     public string Name { get; set; } = "새 매크로";
     public DateTime CreatedUtc { get; set; } = DateTime.UtcNow;
     public CoordinateMode CoordinateMode { get; set; }
     public TargetWindowInfo? TargetWindow { get; set; }
     public Dictionary<string, string> Variables { get; set; } = new(StringComparer.OrdinalIgnoreCase);
+    public Dictionary<string, List<string>> VariableGroups { get; set; } = new(StringComparer.OrdinalIgnoreCase);
     public List<MacroEvent> Events { get; set; } = [];
-    public static bool IsSupportedFormatVersion(int version) => version is 1 or CurrentFormatVersion;
+    public static bool IsSupportedFormatVersion(int version) => version is >= 1 and <= CurrentFormatVersion;
 }
 
 public sealed class UserSettings
