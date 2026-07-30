@@ -39,6 +39,7 @@
   <sys:String x:Key="DeleteSelected">선택 삭제</sys:String>
   <sys:String x:Key="VariablesButton">변수</sys:String>
   <sys:String x:Key="InsertClipboardVariable">클립보드 넣기</sys:String>
+  <sys:String x:Key="InsertTextTrigger">텍스트 기다리기</sys:String>
   <sys:String x:Key="RandomBranchButton">랜덤 갈래</sys:String>
   <sys:String x:Key="VariablesTitle">매크로 변수</sys:String>
   <sys:String x:Key="VariablesHelp">이름과 값을 저장하고, 무작위로 고를 값에는 같은 그룹 이름을 입력하세요.</sys:String>
@@ -61,6 +62,19 @@
   <sys:String x:Key="VariableGroupMissingFormat">변수 그룹 '{0}'이 비어 있거나 존재하지 않습니다.</sys:String>
   <sys:String x:Key="RandomVariableGroupFormat">무작위 그룹: {0}</sys:String>
   <sys:String x:Key="Insert">넣기</sys:String>
+  <sys:String x:Key="TextTriggerTitle">창 텍스트 기다리기</sys:String>
+  <sys:String x:Key="TextTriggerHelp">재생이 이 이벤트에 도달하면 선택한 크롬 또는 프로그램 창에 지정 텍스트가 나타날 때까지 기다립니다.</sys:String>
+  <sys:String x:Key="TextTriggerWindow">감시할 창</sys:String>
+  <sys:String x:Key="TextTriggerText">감지할 텍스트</sys:String>
+  <sys:String x:Key="ContainsMatch">포함</sys:String>
+  <sys:String x:Key="ExactMatch">전체 일치</sys:String>
+  <sys:String x:Key="TextTriggerTimeout">제한시간 초 (0 = 무제한)</sys:String>
+  <sys:String x:Key="TextTriggerAccessibilityNote">Windows 접근성 트리에서 텍스트를 찾습니다. 캔버스·이미지에만 그려졌거나 접근성 API에 숨겨진 텍스트는 감지할 수 없습니다.</sys:String>
+  <sys:String x:Key="TextTriggerWindowRequired">감시할 창을 선택하세요.</sys:String>
+  <sys:String x:Key="TextTriggerRequired">감지할 텍스트를 입력하세요.</sys:String>
+  <sys:String x:Key="TextTriggerTimeoutInvalid">제한시간을 0~3600초로 입력하세요.</sys:String>
+  <sys:String x:Key="TextTriggerTimeoutFormat">텍스트 대기가 {0}초 후 시간 초과되었습니다.</sys:String>
+  <sys:String x:Key="TextScanUnavailable">창 접근성 트리가 응답하지 않아 텍스트 감지를 안전하게 중지했습니다.</sys:String>
   <sys:String x:Key="ClipboardBusy">클립보드를 사용할 수 없습니다. 잠시 후 다시 시도하세요.</sys:String>
   <sys:String x:Key="RandomBranchesTitle">랜덤 갈래 편집</sys:String>
   <sys:String x:Key="RandomBranchesHelp">왼쪽에서 마우스 이동·클릭·키 입력을 Shift로 범위 선택하고 하나의 행동 다발로 추가하세요. 재생할 때마다 갈래 하나만 무작위로 실행합니다.</sys:String>
@@ -102,9 +116,13 @@
   <sys:String x:Key="WaitForSaveDialog">저장 창 대기</sys:String>
   <sys:String x:Key="SetClipboardVariable">클립보드 변수</sys:String>
   <sys:String x:Key="RandomBranch">랜덤 갈래</sys:String>
+  <sys:String x:Key="WaitForWindowText">텍스트 기다리기</sys:String>
   <sys:String x:Key="VariableNotSelected">변수 선택 안 됨</sys:String>
   <sys:String x:Key="BranchCountFormat">갈래 {0}개</sys:String>
   <sys:String x:Key="BranchDisplayFormat">{0} — 이벤트 {1}개</sys:String>
+  <sys:String x:Key="WaitTextDisplayFormat">“{0}” / {1}</sys:String>
+  <sys:String x:Key="Unlimited">무제한</sys:String>
+  <sys:String x:Key="SecondsFormat">{0}초</sys:String>
   <sys:String x:Key="ExtendedKey">확장</sys:String>
   <sys:String x:Key="MouseMoveGroupFormat">{0,7} ms  마우스 이동 × {1}  ({2}, {3}) → ({4}, {5})</sys:String>
   <sys:String x:Key="HotkeyFooterFormat">{0} 녹화  ·  {1} 재생  ·  {2} 일시정지  ·  {3} 긴급 중지</sys:String>

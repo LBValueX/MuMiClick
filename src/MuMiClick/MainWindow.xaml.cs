@@ -329,6 +329,19 @@ public partial class MainWindow : Window
             VariableGroupName = dialog.VariableGroupName
         });
     }
+    private void InsertTextTrigger_Click(object sender, RoutedEventArgs e)
+    {
+        var dialog = new TextTriggerWindow(_target, _settings.DarkMode) { Owner = this };
+        if (dialog.ShowDialog() != true || dialog.TargetWindow is null) return;
+        InsertEventAtSelection(new MacroEvent
+        {
+            Kind = MacroEventKind.WaitForWindowText,
+            WaitText = dialog.ExpectedText,
+            TextExactMatch = dialog.ExactMatch,
+            TextTargetWindow = dialog.TargetWindow,
+            TimeoutMs = dialog.TimeoutMs
+        });
+    }
     private void RandomBranch_Click(object sender, RoutedEventArgs e)
     {
         var selected = EventList.SelectedItems.Cast<EventListItem>().SelectMany(x => x.SourceEvents).Distinct().ToList();

@@ -88,6 +88,19 @@ Enable **Wait for Save As dialog** in advanced mode when a recorded workflow ope
 
 Existing macros can receive the same marker with **Insert Save wait** in the event list.
 
+## Wait for text in Chrome or another window
+
+Use **Wait for text** above the event list when the next action must not run until a message, label, button, or status text appears.
+
+1. Select the event-list position where playback should pause and click **Wait for text**.
+2. Select the Chrome or application window to monitor.
+3. Enter the expected text and choose **Contains** or **Exact text**.
+4. Set a timeout from 1 to 3600 seconds, or use `0` for unlimited waiting.
+
+Playback checks the window's Windows accessibility tree every 350 ms. When the text appears, playback continues while compensating for the wait duration so later inputs do not bunch together. Pause/resume and emergency stop remain available during the wait. Chrome window titles may change during navigation; MuMiClick safely falls back to the same process and window class when the match is unambiguous.
+
+This is accessibility-text detection, not OCR. Text painted only onto a canvas or image, or intentionally hidden from accessibility APIs, cannot be detected. Chromium documents that its accessibility tree is exposed to Windows automation and assistive-technology clients; see the [Chromium accessibility overview](https://chromium.googlesource.com/chromium/src/+/main/docs/accessibility/overview.md).
+
 ## Instant mouse movement
 
 Enable **Jump before click** to skip intermediate mouse movement during playback and jump directly to the accurate coordinates immediately before clicks, wheel input, and drag endpoints. A small configurable delay, 30 ms by default, keeps drag detection reliable.
@@ -126,7 +139,7 @@ dotnet publish src\MuMiClick\MuMiClick.csproj -c Release -p:PublishProfile=Porta
 dotnet run --project tests\MuMiClick.SmokeTests\MuMiClick.SmokeTests.csproj -c Release
 ```
 
-The smoke suite covers safe defaults, language selection, single-key hotkey parsing, JSON round trips, KeyDown/KeyUp preservation, Save-dialog wait events, timestamp ordering, mouse-movement display grouping, variable groups, fixed and random clipboard events, random action bundles, branch selection, and the editor windows.
+The smoke suite covers safe defaults, language selection, single-key hotkey parsing, JSON round trips, KeyDown/KeyUp preservation, Save-dialog wait events, window-text triggers, contains/exact matching, real Win32 accessibility-tree text detection, Chrome accessibility connection, timestamp ordering, mouse-movement display grouping, variable groups, fixed and random clipboard events, random action bundles, branch selection, and the editor windows.
 
 ## Known limitations
 
@@ -134,6 +147,7 @@ The smoke suite covers safe defaults, language selection, single-key hotkey pars
 - UIPI requires MuMiClick to run at the same or higher integrity level as the target.
 - Secure desktop, UAC credential screens, some anti-cheat software, and applications that reject synthetic input cannot be automated.
 - Window-relative playback identifies windows by saved process, title, and class information; highly dynamic titles may require selecting the target again.
+- Window-text triggers can detect only text exposed by the target application's Windows accessibility tree; canvas, image-only, protected, and inaccessible content requires a different trigger.
 - Physical multi-monitor and IME scenarios still require manual validation on the intended machine.
 
 ## Privacy

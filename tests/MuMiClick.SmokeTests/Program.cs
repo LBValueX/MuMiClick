@@ -29,14 +29,46 @@ var workflowDoc = new MacroDocument
                 new MacroBranch { Name = "Right", Events = [new MacroEvent { TimeMs = 0, Kind = MacroEventKind.MouseDown, Button = MouseButtonKind.Right, X = 30, Y = 40 }] }
             ]
         },
-        new MacroEvent { TimeMs = 30, Kind = MacroEventKind.SetClipboardVariable, RandomFromVariableGroup = true, VariableGroupName = "imageNames" }
+        new MacroEvent { TimeMs = 30, Kind = MacroEventKind.SetClipboardVariable, RandomFromVariableGroup = true, VariableGroupName = "imageNames" },
+        new MacroEvent
+        {
+            TimeMs = 40, Kind = MacroEventKind.WaitForWindowText, WaitText = "Download complete", TextExactMatch = false, TimeoutMs = 60000,
+            TextTargetWindow = new TargetWindowInfo { Title = "Downloads - Chrome", ClassName = "Chrome_WidgetWin_1", ProcessName = "chrome", ProcessId = 99 }
+        }
     ]
 };
 var restoredWorkflow = JsonSerializer.Deserialize<MacroDocument>(JsonSerializer.Serialize(workflowDoc))!;
-Check(restoredWorkflow.FormatVersion == 3 && MacroDocument.IsSupportedFormatVersion(1) && MacroDocument.IsSupportedFormatVersion(2), "format v3 save and v1/v2 backward compatibility");
+Check(restoredWorkflow.FormatVersion == 4 && MacroDocument.IsSupportedFormatVersion(1) && MacroDocument.IsSupportedFormatVersion(3), "format v4 save and v1-v3 backward compatibility");
 Check(restoredWorkflow.Variables["fileName"] == "sample-001.png" && restoredWorkflow.Events[0].VariableName == "fileName", "variable and clipboard event JSON round trip");
 Check(restoredWorkflow.Events[1].Branches?.Count == 2 && restoredWorkflow.Events[1].Branches![0].Events.Count == 1, "random action bundles JSON round trip");
 Check(restoredWorkflow.VariableGroups["imageNames"].Count == 2 && restoredWorkflow.Events[2].RandomFromVariableGroup, "variable group and random clipboard event JSON round trip");
+Check(restoredWorkflow.Events[3].Kind == MacroEventKind.WaitForWindowText && restoredWorkflow.Events[3].TextTargetWindow?.ProcessName == "chrome" && restoredWorkflow.Events[3].TimeoutMs == 60000, "window text trigger JSON round trip");
+Check(WindowTextLocator.MatchesText("Image download complete", "download complete", false) && !WindowTextLocator.MatchesText("Image download complete", "download complete", true), "window text contains and exact matching");
+Exception? accessibilityFailure = null;
+var accessibilityReady = new ManualResetEventSlim();
+System.Windows.Forms.Form? accessibilityForm = null;
+IntPtr accessibilityHandle = IntPtr.Zero;
+var accessibilityThread = new Thread(() =>
+{
+    try
+    {
+        accessibilityForm = new System.Windows.Forms.Form { Text = "MuMiClick Accessibility Probe", Width = 320, Height = 120, Left = -32000, Top = -32000, ShowInTaskbar = false };
+        accessibilityForm.Controls.Add(new System.Windows.Forms.Label { Text = "Chrome text trigger ready", AutoSize = true, Left = 12, Top = 12 });
+        accessibilityForm.Shown += (_, _) => { accessibilityHandle = accessibilityForm.Handle; accessibilityReady.Set(); };
+        System.Windows.Forms.Application.Run(accessibilityForm);
+    }
+    catch (Exception ex) { accessibilityFailure = ex; accessibilityReady.Set(); }
+});
+accessibilityThread.SetApartmentState(ApartmentState.STA);
+accessibilityThread.Start();
+Check(accessibilityReady.Wait(TimeSpan.FromSeconds(5)) && accessibilityFailure is null, "accessibility probe window starts");
+Check(WindowTextLocator.ContainsText(accessibilityHandle, "text trigger ready", false), "Win32 accessibility tree text detection");
+accessibilityForm?.BeginInvoke(accessibilityForm.Close);
+accessibilityThread.Join();
+if (accessibilityFailure is not null) throw accessibilityFailure;
+var chromeWindow = WindowLocator.GetWindows().FirstOrDefault(x => x.ProcessName.Contains("chrome", StringComparison.OrdinalIgnoreCase));
+if (chromeWindow is not null) Check(WindowTextLocator.CanInspect(WindowLocator.Find(chromeWindow)), "Chrome accessibility root connection");
+else Console.WriteLine("SKIP: Chrome accessibility root connection (no Chrome window open)");
 var variableRandom = new Random(1234);
 var randomVariableChoices = Enumerable.Range(0, 100).Select(_ => MacroPlayer.ChooseVariableName(restoredWorkflow.Events[2], restoredWorkflow.Variables, restoredWorkflow.VariableGroups, variableRandom)).ToHashSet();
 Check(randomVariableChoices.SetEquals(new[] { "fileName", "backupName" }), "random clipboard selection uses every member of the selected group");
@@ -61,6 +93,9 @@ var localizationThread = new Thread(() =>
         var clipboardWindow = new ClipboardEventWindow(workflowDoc.Variables.Keys, workflowDoc.VariableGroups.Keys, true);
         Check(clipboardWindow.Title == "Insert Clipboard Event", "clipboard event option window XAML construction");
         clipboardWindow.Close();
+        var textTriggerWindow = new TextTriggerWindow(workflowDoc.Events[3].TextTargetWindow, true);
+        Check(textTriggerWindow.Title == "Wait for Window Text", "window text trigger editor XAML construction");
+        textTriggerWindow.Close();
         var branchSource = workflowDoc.Events[1].Branches![0].Events;
         var branchWindow = new RandomBranchWindow(branchSource, branchSource, restoredWorkflow.Events[1].Branches,
             CoordinateMode.AbsoluteScreen, null, true);

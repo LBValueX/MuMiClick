@@ -87,6 +87,13 @@ internal sealed class MacroPlayer
                     await WindowLocator.WaitForSaveDialogAsync(e.TimeoutMs <= 0 ? 15000 : e.TimeoutMs, ct);
                     externalWaitOffset += sw.ElapsedMilliseconds - waitStarted;
                 }
+                else if (e.Kind == MacroEventKind.WaitForWindowText)
+                {
+                    if (e.TextTargetWindow is null) throw new InvalidOperationException(LocalizationService.T("TextTriggerWindowRequired"));
+                    var waitStarted = sw.ElapsedMilliseconds;
+                    await WindowTextLocator.WaitForTextAsync(e.TextTargetWindow, e.WaitText ?? "", e.TextExactMatch, e.TimeoutMs, ct);
+                    externalWaitOffset += sw.ElapsedMilliseconds - waitStarted;
+                }
                 else if (e.Kind == MacroEventKind.SetClipboardVariable) await SetClipboardVariableAsync(e, variables, variableGroups, ct);
                 else if (e.Kind == MacroEventKind.RandomBranch) await PlayRandomBranchAsync(e.Branches, variables, variableGroups, speed, instantMouseMovement, instantMouseDelayMs, ct);
                 else Send(e, target);

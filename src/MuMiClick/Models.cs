@@ -2,7 +2,7 @@ using System.Text.Json.Serialization;
 
 namespace MuMiClick;
 
-public enum MacroEventKind { MouseMove, MouseDown, MouseUp, MouseWheel, KeyDown, KeyUp, WaitForSaveDialog, SetClipboardVariable, RandomBranch }
+public enum MacroEventKind { MouseMove, MouseDown, MouseUp, MouseWheel, KeyDown, KeyUp, WaitForSaveDialog, SetClipboardVariable, RandomBranch, WaitForWindowText }
 public enum MouseButtonKind { Left, Right, Middle, X1, X2 }
 public enum CoordinateMode { AbsoluteScreen, TargetWindow }
 
@@ -21,6 +21,9 @@ public sealed class MacroEvent
     public string? VariableName { get; set; }
     public bool RandomFromVariableGroup { get; set; }
     public string? VariableGroupName { get; set; }
+    public string? WaitText { get; set; }
+    public bool TextExactMatch { get; set; }
+    public TargetWindowInfo? TextTargetWindow { get; set; }
     public List<MacroBranch>? Branches { get; set; }
     [JsonIgnore] public string Display => $"{TimeMs,7} ms  {KindName(),-14} {Describe()}";
     private string KindName() => Kind switch
@@ -34,6 +37,7 @@ public sealed class MacroEvent
         MacroEventKind.WaitForSaveDialog => LocalizationService.T("WaitForSaveDialog"),
         MacroEventKind.SetClipboardVariable => LocalizationService.T("SetClipboardVariable"),
         MacroEventKind.RandomBranch => LocalizationService.T("RandomBranch"),
+        MacroEventKind.WaitForWindowText => LocalizationService.T("WaitForWindowText"),
         _ => Kind.ToString()
     };
     private string Describe() => Kind switch
@@ -46,6 +50,7 @@ public sealed class MacroEvent
             ? LocalizationService.F("RandomVariableGroupFormat", VariableGroupName ?? LocalizationService.T("VariableGroupNotSelected"))
             : VariableName ?? LocalizationService.T("VariableNotSelected"),
         MacroEventKind.RandomBranch => LocalizationService.F("BranchCountFormat", Branches?.Count ?? 0),
+        MacroEventKind.WaitForWindowText => LocalizationService.F("WaitTextDisplayFormat", WaitText ?? "", TimeoutMs <= 0 ? LocalizationService.T("Unlimited") : LocalizationService.F("SecondsFormat", Math.Max(1, TimeoutMs / 1000))),
         _ => $"VK {VirtualKey} / Scan {ScanCode}" + (Extended ? $" ({LocalizationService.T("ExtendedKey")})" : "")
     };
 }
@@ -79,7 +84,7 @@ public sealed class TargetWindowInfo
 
 public sealed class MacroDocument
 {
-    public const int CurrentFormatVersion = 3;
+    public const int CurrentFormatVersion = 4;
     public int FormatVersion { get; set; } = CurrentFormatVersion;
     public string Name { get; set; } = "새 매크로";
     public DateTime CreatedUtc { get; set; } = DateTime.UtcNow;

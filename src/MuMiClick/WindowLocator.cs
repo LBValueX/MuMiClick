@@ -83,6 +83,21 @@ internal static class WindowLocator
         NativeMethods.EnumWindows((h, _) => { if (TryDescribe(h, out var i) && i.ClassName == wanted.ClassName && i.ProcessName.Equals(wanted.ProcessName, StringComparison.OrdinalIgnoreCase) && i.Title == wanted.Title) { result = h; return false; } return true; }, IntPtr.Zero);
         return result;
     }
+    public static IntPtr FindFlexible(TargetWindowInfo wanted)
+    {
+        var exact = Find(wanted);
+        if (exact != IntPtr.Zero) return exact;
+        var candidates = new List<(IntPtr Handle, TargetWindowInfo Info)>();
+        NativeMethods.EnumWindows((h, _) =>
+        {
+            if (TryDescribe(h, out var info) && info.ClassName == wanted.ClassName && info.ProcessName.Equals(wanted.ProcessName, StringComparison.OrdinalIgnoreCase))
+                candidates.Add((h, info));
+            return true;
+        }, IntPtr.Zero);
+        if (candidates.Count == 1) return candidates[0].Handle;
+        var sameProcess = candidates.Where(x => x.Info.ProcessId == wanted.ProcessId).ToList();
+        return sameProcess.Count == 1 ? sameProcess[0].Handle : IntPtr.Zero;
+    }
     public static (int X, int Y) ToRelative(IntPtr h, int x, int y) { var p = new NativeMethods.POINT { X = x, Y = y }; NativeMethods.ScreenToClient(h, ref p); return (p.X, p.Y); }
     public static (int X, int Y) ToScreen(IntPtr h, int x, int y) { var p = new NativeMethods.POINT { X = x, Y = y }; NativeMethods.ClientToScreen(h, ref p); return (p.X, p.Y); }
 }

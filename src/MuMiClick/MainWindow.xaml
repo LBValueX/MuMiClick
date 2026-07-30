@@ -219,6 +219,7 @@
             <WrapPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
               <Button Click="Variables_Click" Style="{StaticResource CompactButton}" Content="{DynamicResource VariablesButton}"/>
               <Button Click="InsertClipboardVariable_Click" Style="{StaticResource CompactButton}" Content="{DynamicResource InsertClipboardVariable}"/>
+              <Button Click="InsertTextTrigger_Click" Style="{StaticResource CompactButton}" Content="{DynamicResource InsertTextTrigger}"/>
               <Button Click="RandomBranch_Click" Style="{StaticResource CompactButton}" Content="{DynamicResource RandomBranchButton}"/>
               <Button x:Name="ToggleMovesButton" Click="ToggleMouseGroups_Click" Style="{StaticResource CompactButton}" Content="{DynamicResource ExpandMouseMoves}"/>
               <Button Click="InsertSaveWait_Click" Style="{StaticResource CompactButton}" Content="{DynamicResource InsertSaveWait}"/>
