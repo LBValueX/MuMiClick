@@ -292,6 +292,27 @@ public partial class MainWindow : Window
         foreach (var item in _events.Where(selected.Contains).ToList()) _events.Remove(item);
         RebuildEventRows();
     }
+    private void EditEvent_Click(object sender, RoutedEventArgs e)
+    {
+        if (_recording || _countingDown || _player.IsPlaying) return;
+        var rows = EventList.SelectedItems.Cast<EventListItem>().ToList();
+        if (rows.Count != 1) { WpfMessageBox.Show(this, LocalizationService.T("SelectOneActionToEdit")); return; }
+        var row = rows[0];
+        if (row.IsMouseMoveGroup && !row.IsChild) { WpfMessageBox.Show(this, LocalizationService.T("ExpandMouseMovesToEdit")); return; }
+        var selected = row.Event ?? row.SourceEvents.FirstOrDefault();
+        if (selected?.Kind == MacroEventKind.RandomBranch) { RandomBranch_Click(sender, e); return; }
+        if (selected is null || !ActionEditService.IsEditable(selected)) { WpfMessageBox.Show(this, LocalizationService.T("UnsupportedActionEdit")); return; }
+        var source = ActionEditService.FindLogicalAction(_events.ToList(), selected);
+        if (source.Count == 0) return;
+        var dialog = new ActionEditorWindow(source[0], source.Count > 1 ? source[1] : null, _settings.DarkMode) { Owner = this };
+        if (dialog.ShowDialog() != true || dialog.ReplacementEvents.Count == 0) return;
+        var replacements = dialog.ReplacementEvents;
+        var rebuilt = ActionEditService.ReplaceLogicalAction(_events.ToList(), source, replacements);
+        _events.Clear(); foreach (var item in rebuilt) _events.Add(item);
+        RebuildEventRows();
+        EventList.SelectedItem = _eventRows.FirstOrDefault(x => x.SourceEvents.Any(item => ReferenceEquals(item, replacements[0])));
+        if (EventList.SelectedItem is not null) EventList.ScrollIntoView(EventList.SelectedItem);
+    }
     private void InsertSaveWait_Click(object sender, RoutedEventArgs e)
     {
         var timeoutSeconds = int.TryParse(SaveDialogTimeoutBox.Text, out var parsed) ? Math.Clamp(parsed, 1, 60) : 15;
@@ -377,7 +398,12 @@ public partial class MainWindow : Window
         RebuildEventRows();
         EventList.SelectedItem = _eventRows.FirstOrDefault(x => ReferenceEquals(x.Event, inserted));
     }
-    private void EventList_KeyDown(object sender, System.Windows.Input.KeyEventArgs e) { if (e.Key == Key.Delete) DeleteEvent_Click(sender, e); }
+    private void EventList_KeyDown(object sender, System.Windows.Input.KeyEventArgs e)
+    {
+        if (e.Key == Key.Delete) { DeleteEvent_Click(sender, e); e.Handled = true; }
+        else if (e.Key == Key.Enter) { EditEvent_Click(sender, e); e.Handled = true; }
+    }
+    private void EventList_MouseDoubleClick(object sender, System.Windows.Input.MouseButtonEventArgs e) { EditEvent_Click(sender, e); e.Handled = true; }
     private void Save_Click(object sender, RoutedEventArgs e)
     {
         var dialog = new WpfSaveFileDialog { Filter = LocalizationService.T("MacroFilter"), FileName = "macro.mumacro" };

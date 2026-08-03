@@ -77,6 +77,21 @@ Check(chosen is not null && restoredWorkflow.Events[1].Branches!.Contains(chosen
 var moveGroup = EventListItem.Group(new MacroEvent { Kind = MacroEventKind.MouseMove, X = 10, Y = 20 });
 moveGroup.AddToGroup(new MacroEvent { Kind = MacroEventKind.MouseMove, X = 30, Y = 40 });
 Check(moveGroup.IsMouseMoveGroup && moveGroup.SourceEvents.Count == 2, "연속 마우스 이동 표시 그룹 구성");
+var clickPair = ActionEditorWindow.CreateMouseClickEvents(100, 320, 240, MouseButtonKind.Left, 45);
+var dragMove = new MacroEvent { TimeMs = 120, Kind = MacroEventKind.MouseMove, X = 350, Y = 260 };
+var clickSequence = new List<MacroEvent> { clickPair[0], dragMove, clickPair[1] };
+var logicalClick = ActionEditService.FindLogicalAction(clickSequence, clickPair[0]);
+Check(logicalClick.Count == 2 && logicalClick[0].Kind == MacroEventKind.MouseDown && logicalClick[1].Kind == MacroEventKind.MouseUp, "mouse Down/Up logical action pairing across movement");
+var keyPair = ActionEditorWindow.CreateKeyPressEvents(100, 0x41, 45);
+var convertedSequence = ActionEditService.ReplaceLogicalAction(clickSequence, logicalClick, keyPair);
+Check(convertedSequence.Count == 3 && convertedSequence[0].Kind == MacroEventKind.KeyDown && ReferenceEquals(convertedSequence[1], dragMove) && convertedSequence[2].Kind == MacroEventKind.KeyUp, "mouse click converts to balanced key press while preserving intermediate actions");
+Check(keyPair[0].ScanCode != 0 && keyPair[0].ScanCode == keyPair[1].ScanCode && keyPair[0].TimeMs < keyPair[1].TimeMs, "edited key press uses matching scan-code Down/Up events");
+var controlDown = new MacroEvent { TimeMs = 200, Kind = MacroEventKind.KeyDown, VirtualKey = 0xA2, ScanCode = 0x1D };
+var letterPair = ActionEditorWindow.CreateKeyPressEvents(210, 0x41, 20);
+var controlUp = new MacroEvent { TimeMs = 240, Kind = MacroEventKind.KeyUp, VirtualKey = 0xA2, ScanCode = 0x1D };
+var shortcutSequence = new List<MacroEvent> { controlDown, letterPair[0], letterPair[1], controlUp };
+var logicalModifier = ActionEditService.FindLogicalAction(shortcutSequence, controlUp);
+Check(logicalModifier.Count == 2 && ReferenceEquals(logicalModifier[0], controlDown) && ReferenceEquals(logicalModifier[1], controlUp), "modifier Down/Up pairing across shortcut actions");
 Exception? localizationFailure = null;
 var localizationThread = new Thread(() =>
 {
@@ -96,6 +111,9 @@ var localizationThread = new Thread(() =>
         var textTriggerWindow = new TextTriggerWindow(workflowDoc.Events[3].TextTargetWindow, true);
         Check(textTriggerWindow.Title == "Wait for Window Text", "window text trigger editor XAML construction");
         textTriggerWindow.Close();
+        var actionEditorWindow = new ActionEditorWindow(clickPair[0], clickPair[1], true);
+        Check(actionEditorWindow.Title == "Edit Action", "action editor XAML construction");
+        actionEditorWindow.Close();
         var branchSource = workflowDoc.Events[1].Branches![0].Events;
         var branchWindow = new RandomBranchWindow(branchSource, branchSource, restoredWorkflow.Events[1].Branches,
             CoordinateMode.AbsoluteScreen, null, true);

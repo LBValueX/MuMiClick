@@ -58,6 +58,18 @@ Consecutive mouse-move events are collapsed into one row to keep recordings read
 
 Grouping changes only how the list is displayed. Saved macro data and playback timing retain the original movement events.
 
+## Edit individual actions
+
+Select one recorded mouse or keyboard row and click **Edit action**, double-click it, or press `Enter`.
+
+- Convert between mouse move, mouse click, mouse wheel, and keyboard key press.
+- Edit mouse X/Y coordinates, button, wheel delta, key, and press duration.
+- A click or key press is always written as a balanced Down/Up pair so editing cannot leave a button or key held down.
+- When a Down/Up pair surrounds intermediate actions, such as mouse movement during a drag or keys inside a shortcut, those intermediate actions retain their original positions.
+- Expand a collapsed mouse-movement group before editing one movement.
+
+Select either the Down or Up row; MuMiClick locates and edits the matching pair. Random branches continue to use their dedicated branch editor. Control events such as clipboard assignment, Save-dialog wait, and window-text wait can be deleted and reinserted with their respective toolbar controls.
+
 ## Variables and clipboard events
 
 Use **Variables** above the event list to define reusable name/value pairs. The optional **Group** column combines variables that should be used as one random pool; enter the same group name on each member.
@@ -139,7 +151,7 @@ dotnet publish src\MuMiClick\MuMiClick.csproj -c Release -p:PublishProfile=Porta
 dotnet run --project tests\MuMiClick.SmokeTests\MuMiClick.SmokeTests.csproj -c Release
 ```
 
-The smoke suite covers safe defaults, language selection, single-key hotkey parsing, JSON round trips, KeyDown/KeyUp preservation, Save-dialog wait events, window-text triggers, contains/exact matching, real Win32 accessibility-tree text detection, Chrome accessibility connection, timestamp ordering, mouse-movement display grouping, variable groups, fixed and random clipboard events, random action bundles, branch selection, and the editor windows.
+The smoke suite covers safe defaults, language selection, single-key hotkey parsing, JSON round trips, KeyDown/KeyUp preservation, action-pair discovery across drag and shortcut events, mouse-to-key conversion, scan-code Down/Up generation, Save-dialog wait events, window-text triggers, contains/exact matching, real Win32 accessibility-tree text detection, Chrome accessibility connection, timestamp ordering, mouse-movement display grouping, variable groups, fixed and random clipboard events, random action bundles, branch selection, and the editor windows.
 
 ## Known limitations
 

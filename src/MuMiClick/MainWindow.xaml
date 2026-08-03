@@ -223,10 +223,11 @@
               <Button Click="RandomBranch_Click" Style="{StaticResource CompactButton}" Content="{DynamicResource RandomBranchButton}"/>
               <Button x:Name="ToggleMovesButton" Click="ToggleMouseGroups_Click" Style="{StaticResource CompactButton}" Content="{DynamicResource ExpandMouseMoves}"/>
               <Button Click="InsertSaveWait_Click" Style="{StaticResource CompactButton}" Content="{DynamicResource InsertSaveWait}"/>
+              <Button Click="EditEvent_Click" Style="{StaticResource CompactButton}" Content="{DynamicResource EditSelected}"/>
               <Button Click="DeleteEvent_Click" Style="{StaticResource CompactButton}" Margin="0" Content="{DynamicResource DeleteSelected}"/>
             </WrapPanel>
           </Grid>
-          <ListBox x:Name="EventList" SelectionMode="Extended" KeyDown="EventList_KeyDown" BorderThickness="1" BorderBrush="{DynamicResource LineBrush}" Background="{DynamicResource ListBrush}" Foreground="{DynamicResource TextBrush}" Padding="6" FontFamily="Consolas">
+          <ListBox x:Name="EventList" SelectionMode="Extended" KeyDown="EventList_KeyDown" MouseDoubleClick="EventList_MouseDoubleClick" BorderThickness="1" BorderBrush="{DynamicResource LineBrush}" Background="{DynamicResource ListBrush}" Foreground="{DynamicResource TextBrush}" Padding="6" FontFamily="Consolas">
             <ListBox.ItemTemplate>
               <DataTemplate>
                 <DockPanel LastChildFill="True">
