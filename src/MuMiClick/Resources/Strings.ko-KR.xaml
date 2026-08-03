@@ -68,6 +68,9 @@
   <sys:String x:Key="InsertClipboardVariable">클립보드 넣기</sys:String>
   <sys:String x:Key="InsertTextTrigger">텍스트 기다리기</sys:String>
   <sys:String x:Key="RandomBranchButton">랜덤 갈래</sys:String>
+  <sys:String x:Key="DataTools">데이터 ▾</sys:String>
+  <sys:String x:Key="WaitTools">대기 ▾</sys:String>
+  <sys:String x:Key="ActionTools">액션 ▾</sys:String>
   <sys:String x:Key="VariablesTitle">매크로 변수</sys:String>
   <sys:String x:Key="VariablesHelp">이름과 값을 저장하고, 무작위로 고를 값에는 같은 그룹 이름을 입력하세요.</sys:String>
   <sys:String x:Key="VariableName">이름</sys:String>

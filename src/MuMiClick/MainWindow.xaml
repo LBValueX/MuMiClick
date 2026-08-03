@@ -217,13 +217,31 @@
             <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
             <StackPanel><TextBlock Text="{DynamicResource RecordedEvents}" FontSize="16" FontWeight="Bold" Foreground="{DynamicResource TextBrush}"/><TextBlock Text="{DynamicResource EventHelp}" Margin="0,3,0,0" Foreground="{DynamicResource MutedBrush}" FontSize="12"/></StackPanel>
             <WrapPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
-              <Button Click="Variables_Click" Style="{StaticResource CompactButton}" Content="{DynamicResource VariablesButton}"/>
-              <Button Click="InsertClipboardVariable_Click" Style="{StaticResource CompactButton}" Content="{DynamicResource InsertClipboardVariable}"/>
-              <Button Click="InsertTextTrigger_Click" Style="{StaticResource CompactButton}" Content="{DynamicResource InsertTextTrigger}"/>
-              <Button Click="RandomBranch_Click" Style="{StaticResource CompactButton}" Content="{DynamicResource RandomBranchButton}"/>
+              <Button Click="OpenToolMenu_Click" Style="{StaticResource CompactButton}" Content="{DynamicResource DataTools}">
+                <Button.ContextMenu>
+                  <ContextMenu Background="{DynamicResource SurfaceBrush}" Foreground="{DynamicResource TextBrush}" BorderBrush="{DynamicResource LineBrush}">
+                    <MenuItem Header="{DynamicResource VariablesButton}" Click="Variables_Click"/>
+                    <MenuItem Header="{DynamicResource InsertClipboardVariable}" Click="InsertClipboardVariable_Click"/>
+                  </ContextMenu>
+                </Button.ContextMenu>
+              </Button>
+              <Button Click="OpenToolMenu_Click" Style="{StaticResource CompactButton}" Content="{DynamicResource WaitTools}">
+                <Button.ContextMenu>
+                  <ContextMenu Background="{DynamicResource SurfaceBrush}" Foreground="{DynamicResource TextBrush}" BorderBrush="{DynamicResource LineBrush}">
+                    <MenuItem Header="{DynamicResource InsertSaveWait}" Click="InsertSaveWait_Click"/>
+                    <MenuItem Header="{DynamicResource InsertTextTrigger}" Click="InsertTextTrigger_Click"/>
+                  </ContextMenu>
+                </Button.ContextMenu>
+              </Button>
+              <Button Click="OpenToolMenu_Click" Style="{StaticResource CompactButton}" Content="{DynamicResource ActionTools}">
+                <Button.ContextMenu>
+                  <ContextMenu Background="{DynamicResource SurfaceBrush}" Foreground="{DynamicResource TextBrush}" BorderBrush="{DynamicResource LineBrush}">
+                    <MenuItem Header="{DynamicResource RandomBranchButton}" Click="RandomBranch_Click"/>
+                    <MenuItem Header="{DynamicResource EditSelected}" Click="EditEvent_Click"/>
+                  </ContextMenu>
+                </Button.ContextMenu>
+              </Button>
               <Button x:Name="ToggleMovesButton" Click="ToggleMouseGroups_Click" Style="{StaticResource CompactButton}" Content="{DynamicResource ExpandMouseMoves}"/>
-              <Button Click="InsertSaveWait_Click" Style="{StaticResource CompactButton}" Content="{DynamicResource InsertSaveWait}"/>
-              <Button Click="EditEvent_Click" Style="{StaticResource CompactButton}" Content="{DynamicResource EditSelected}"/>
               <Button Click="DeleteEvent_Click" Style="{StaticResource CompactButton}" Margin="0" Content="{DynamicResource DeleteSelected}"/>
             </WrapPanel>
           </Grid>

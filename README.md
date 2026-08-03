@@ -51,6 +51,8 @@ Single keys and combinations such as `Ctrl+Alt+F8` are supported. Hotkeys must b
 
 Consecutive mouse-move events are collapsed into one row to keep recordings readable. Use the arrow on an individual group or **Expand moves** to inspect the original events.
 
+The tools above the list are grouped to keep the workspace compact: **Data** contains Variables and Set clipboard; **Wait** contains Insert Save wait and Wait for text; **Actions** contains Random branch and Edit action. **Expand moves** and **Delete selected** remain immediately available.
+
 - Shift-click selects a continuous range.
 - Ctrl-click adds or removes individual rows from the selection.
 - Deleting a collapsed movement group removes every movement event represented by that group.

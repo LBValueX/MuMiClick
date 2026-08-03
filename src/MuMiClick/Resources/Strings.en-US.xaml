@@ -68,6 +68,9 @@
   <sys:String x:Key="InsertClipboardVariable">Set clipboard</sys:String>
   <sys:String x:Key="InsertTextTrigger">Wait for text</sys:String>
   <sys:String x:Key="RandomBranchButton">Random branch</sys:String>
+  <sys:String x:Key="DataTools">Data ▾</sys:String>
+  <sys:String x:Key="WaitTools">Wait ▾</sys:String>
+  <sys:String x:Key="ActionTools">Actions ▾</sys:String>
   <sys:String x:Key="VariablesTitle">Macro Variables</sys:String>
   <sys:String x:Key="VariablesHelp">Save name/value pairs and enter the same group name for values that should be chosen at random.</sys:String>
   <sys:String x:Key="VariableName">Name</sys:String>

@@ -273,6 +273,13 @@ public partial class MainWindow : Window
         UpdateMouseGroupButton();
     }
 
+    private void OpenToolMenu_Click(object sender, RoutedEventArgs e)
+    {
+        if (sender is not FrameworkElement { ContextMenu: { } menu } placementTarget) return;
+        menu.PlacementTarget = placementTarget;
+        menu.IsOpen = true;
+    }
+
     private void UpdateMouseGroupButton()
     {
         if (ToggleMovesButton is null) return;
