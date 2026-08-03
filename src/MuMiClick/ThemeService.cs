@@ -42,7 +42,8 @@ internal static class ThemeService
         ["StatusPanelBrush"] = "#263248", ["StatusDetailBrush"] = "#B8C2D5", ["StatusCountBrush"] = "#D9E1EF",
         ["ModeBackgroundBrush"] = "#E8EEF8", ["ModeBorderBrush"] = "#D8E1EF", ["ModeTextBrush"] = "#4E5B70",
         ["ModeDotBrush"] = "#8793A5", ["DangerSurfaceBrush"] = "#FFF8F8", ["DangerBorderBrush"] = "#F1C9CB",
-        ["DangerTextBrush"] = "#C8323A"
+        ["DangerTextBrush"] = "#C8323A", ["ActiveEventBrush"] = "#DBEAFE", ["ActiveEventTextBrush"] = "#123B7A",
+        ["ActiveEventBorderBrush"] = "#60A5FA"
     };
 
     private static readonly IReadOnlyDictionary<string, string> DarkPalette = new Dictionary<string, string>
@@ -53,6 +54,7 @@ internal static class ThemeService
         ["StatusPanelBrush"] = "#1F2B40", ["StatusDetailBrush"] = "#BBC8DB", ["StatusCountBrush"] = "#DCE7F7",
         ["ModeBackgroundBrush"] = "#223453", ["ModeBorderBrush"] = "#3B5D91", ["ModeTextBrush"] = "#D3E2FF",
         ["ModeDotBrush"] = "#9FB8E8", ["DangerSurfaceBrush"] = "#42252B", ["DangerBorderBrush"] = "#7A3B46",
-        ["DangerTextBrush"] = "#FFB4B8"
+        ["DangerTextBrush"] = "#FFB4B8", ["ActiveEventBrush"] = "#173A6B", ["ActiveEventTextBrush"] = "#E6F1FF",
+        ["ActiveEventBorderBrush"] = "#60A5FA"
     };
 }

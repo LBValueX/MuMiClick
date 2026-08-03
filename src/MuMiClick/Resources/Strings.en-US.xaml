@@ -34,7 +34,7 @@
   <sys:String x:Key="PrivacyNotice">Recording starts only when requested, and no data is sent outside this computer.</sys:String>
   <sys:String x:Key="EventCountFormat">{0} events</sys:String>
   <sys:String x:Key="RecordedEvents">Recorded events</sys:String>
-  <sys:String x:Key="EventHelp">Consecutive mouse moves are grouped. Shift selects ranges; double-click or press Enter to edit one action.</sys:String>
+  <sys:String x:Key="EventHelp">Consecutive mouse moves are grouped. Playback highlights and scrolls to the active action; Shift selects ranges; double-click or press Enter to edit one action.</sys:String>
   <sys:String x:Key="InsertSaveWait">Insert Save wait</sys:String>
   <sys:String x:Key="DeleteSelected">Delete selected</sys:String>
   <sys:String x:Key="EditSelected">Edit action</sys:String>

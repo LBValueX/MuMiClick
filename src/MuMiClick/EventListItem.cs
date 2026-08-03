@@ -8,6 +8,7 @@ internal sealed class EventListItem : INotifyPropertyChanged
 {
     private readonly List<MacroEvent>? _groupEvents;
     private bool _isExpanded;
+    private bool _isActive;
 
     private EventListItem(MacroEvent? item, List<MacroEvent>? groupEvents, EventListItem? parentGroup)
     {
@@ -32,6 +33,17 @@ internal sealed class EventListItem : INotifyPropertyChanged
             _isExpanded = value;
             OnPropertyChanged();
             OnPropertyChanged(nameof(ExpandGlyph));
+        }
+    }
+
+    public bool IsActive
+    {
+        get => _isActive;
+        set
+        {
+            if (_isActive == value) return;
+            _isActive = value;
+            OnPropertyChanged();
         }
     }
 

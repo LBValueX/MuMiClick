@@ -15,6 +15,7 @@ internal sealed class MacroPlayer
     public bool IsPlaying => _cancel is not null;
     public bool IsPaused => _paused;
     public event Action<long, long, double>? Progress;
+    public event Action<MacroEvent>? ActionStarted;
     public event Action<string>? Completed;
 
     public async Task PlayAsync(MacroDocument doc, int repeat, bool infinite, double speed, int intervalMs, bool instantMouseMovement, int instantMouseDelayMs, CancellationToken appToken)
@@ -81,6 +82,7 @@ internal sealed class MacroPlayer
                     long remain = due - sw.ElapsedMilliseconds; if (remain <= 0) break;
                     await Task.Delay((int)Math.Min(remain, 15), ct); await WaitWhilePausedAsync(ct);
                 }
+                ActionStarted?.Invoke(e);
                 if (e.Kind == MacroEventKind.WaitForSaveDialog)
                 {
                     var waitStarted = sw.ElapsedMilliseconds;

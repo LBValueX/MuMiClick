@@ -28,6 +28,9 @@
     <SolidColorBrush x:Key="DangerSurfaceBrush" Color="#FFF8F8"/>
     <SolidColorBrush x:Key="DangerBorderBrush" Color="#F1C9CB"/>
     <SolidColorBrush x:Key="DangerTextBrush" Color="#C8323A"/>
+    <SolidColorBrush x:Key="ActiveEventBrush" Color="#DBEAFE"/>
+    <SolidColorBrush x:Key="ActiveEventTextBrush" Color="#123B7A"/>
+    <SolidColorBrush x:Key="ActiveEventBorderBrush" Color="#60A5FA"/>
     <SolidColorBrush x:Key="StatusIdleBrush" Color="#FFFFFF"/>
     <SolidColorBrush x:Key="StatusRecordingBrush" Color="#FF8A93"/>
     <SolidColorBrush x:Key="StatusPlayingBrush" Color="#6EE7B7"/>
@@ -246,6 +249,24 @@
             </WrapPanel>
           </Grid>
           <ListBox x:Name="EventList" SelectionMode="Extended" KeyDown="EventList_KeyDown" MouseDoubleClick="EventList_MouseDoubleClick" BorderThickness="1" BorderBrush="{DynamicResource LineBrush}" Background="{DynamicResource ListBrush}" Foreground="{DynamicResource TextBrush}" Padding="6" FontFamily="Consolas">
+            <ListBox.ItemContainerStyle>
+              <Style TargetType="ListBoxItem">
+                <Setter Property="Padding" Value="5,3"/>
+                <Setter Property="Margin" Value="0,1"/>
+                <Setter Property="Background" Value="Transparent"/>
+                <Setter Property="Foreground" Value="{DynamicResource TextBrush}"/>
+                <Setter Property="BorderBrush" Value="Transparent"/>
+                <Setter Property="BorderThickness" Value="1"/>
+                <Style.Triggers>
+                  <Trigger Property="IsSelected" Value="True"><Setter Property="Background" Value="{DynamicResource SurfaceAltBrush}"/></Trigger>
+                  <DataTrigger Binding="{Binding IsActive}" Value="True">
+                    <Setter Property="Background" Value="{DynamicResource ActiveEventBrush}"/>
+                    <Setter Property="Foreground" Value="{DynamicResource ActiveEventTextBrush}"/>
+                    <Setter Property="BorderBrush" Value="{DynamicResource ActiveEventBorderBrush}"/>
+                  </DataTrigger>
+                </Style.Triggers>
+              </Style>
+            </ListBox.ItemContainerStyle>
             <ListBox.ItemTemplate>
               <DataTemplate>
                 <DockPanel LastChildFill="True">

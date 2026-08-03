@@ -33,6 +33,7 @@ public partial class MainWindow : Window
     private CancellationTokenSource? _countdownCancel;
     private bool _recording, _countingDown;
     private bool _saveDialogActiveDuringRecording;
+    private EventListItem? _activeEventRow;
     private Stopwatch _recordWatch = new();
     private const string SettingsFileName = "settings.json";
 
@@ -52,7 +53,8 @@ public partial class MainWindow : Window
         _hook.Recorded += CaptureEvent;
         _hook.PhysicalInput += () => { if (_player.IsPlaying && StopPhysicalBox.IsChecked == true) Dispatcher.BeginInvoke(StopPlayback); };
         _player.Progress += (loop, total, progress) => Dispatcher.BeginInvoke(() => { StatusText.Text = LocalizationService.F("PlaybackStatusFormat", loop, total == long.MaxValue ? "∞" : total); DetailText.Text = LocalizationService.F("ProgressFormat", progress); ElapsedText.Text = progress.ToString("P0"); UpdateControls(); });
-        _player.Completed += text => Dispatcher.BeginInvoke(() => { SetIdle(text); UpdateControls(); });
+        _player.ActionStarted += action => Dispatcher.BeginInvoke(() => HighlightActiveEvent(action));
+        _player.Completed += text => Dispatcher.BeginInvoke(() => { ClearActiveEvent(); SetIdle(text); UpdateControls(); });
         _displayTimer = new DispatcherTimer { Interval = TimeSpan.FromMilliseconds(100) };
         _displayTimer.Tick += (_, _) => { if (_recording) ElapsedText.Text = _recordWatch.Elapsed.ToString(@"mm\:ss\.f"); };
         _displayTimer.Start();
@@ -166,6 +168,7 @@ public partial class MainWindow : Window
         if (!int.TryParse(IntervalBox.Text, out var interval) || interval < 0) { WpfMessageBox.Show(LocalizationService.T("IntervalInvalid")); return; }
         var speed = double.Parse(((System.Windows.Controls.ComboBoxItem)SpeedBox.SelectedItem).Content!.ToString()![..^1], System.Globalization.CultureInfo.InvariantCulture);
         var doc = new MacroDocument { Events = _events.ToList(), Variables = new(_variables, StringComparer.OrdinalIgnoreCase), VariableGroups = CloneVariableGroups(_variableGroups), CoordinateMode = TargetRadio.IsChecked == true ? CoordinateMode.TargetWindow : CoordinateMode.AbsoluteScreen, TargetWindow = _target };
+        ClearActiveEvent();
         StatusText.Foreground = (System.Windows.Media.Brush)FindResource("StatusPlayingBrush"); StatusText.Text = LocalizationService.T("PlaybackReady"); _tray.Text = LocalizationService.T("TrayPlaying"); UpdateControls();
         var instantMouseDelay = int.TryParse(InstantMouseDelayBox.Text, out var parsedMouseDelay) ? Math.Clamp(parsedMouseDelay, 0, 500) : 30;
         await _player.PlayAsync(doc, repeat, infinite, speed, interval, InstantMouseBox.IsChecked == true, instantMouseDelay, _lifetime.Token);
@@ -180,6 +183,28 @@ public partial class MainWindow : Window
         }
     }
     private void StopPlayback() { if (_player.IsPlaying) _player.Stop(); else _player.ReleaseAll(); }
+
+    private void HighlightActiveEvent(MacroEvent action)
+    {
+        var row = _eventRows.FirstOrDefault(x => ReferenceEquals(x.Event, action))
+            ?? _eventRows.FirstOrDefault(x => x.IsMouseMoveGroup && x.SourceEvents.Any(source => ReferenceEquals(source, action)));
+        if (row is null || ReferenceEquals(row, _activeEventRow)) return;
+        if (_activeEventRow is not null) _activeEventRow.IsActive = false;
+        _activeEventRow = row;
+        row.IsActive = true;
+        EventList.SelectedItems.Clear();
+        EventList.SelectedItem = row;
+        EventList.ScrollIntoView(row);
+    }
+
+    private void ClearActiveEvent()
+    {
+        if (_activeEventRow is null) return;
+        _activeEventRow.IsActive = false;
+        _activeEventRow = null;
+        EventList.SelectedItems.Clear();
+    }
+
     private void SetIdle(string message)
     {
         StatusText.Text = LocalizationService.T("StatusIdle"); StatusText.Foreground = (System.Windows.Media.Brush)FindResource("StatusIdleBrush"); DetailText.Text = message; _tray.Text = LocalizationService.T("TrayIdle"); if (!_recording) ElapsedText.Text = "00:00.0";

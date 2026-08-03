@@ -34,7 +34,7 @@
   <sys:String x:Key="PrivacyNotice">녹화는 사용자가 시작한 때만 동작하며 데이터는 외부로 전송되지 않습니다.</sys:String>
   <sys:String x:Key="EventCountFormat">이벤트 {0}개</sys:String>
   <sys:String x:Key="RecordedEvents">녹화된 이벤트</sys:String>
-  <sys:String x:Key="EventHelp">마우스 이동은 연속 구간별로 묶입니다. Shift로 범위를 선택하고, 더블클릭 또는 Enter로 액션 하나를 편집합니다.</sys:String>
+  <sys:String x:Key="EventHelp">마우스 이동은 연속 구간별로 묶입니다. 재생 중인 액션은 자동 선택·스크롤 및 강조 표시됩니다. Shift로 범위를 선택하고, 더블클릭 또는 Enter로 액션 하나를 편집합니다.</sys:String>
   <sys:String x:Key="InsertSaveWait">저장 창 대기</sys:String>
   <sys:String x:Key="DeleteSelected">선택 삭제</sys:String>
   <sys:String x:Key="EditSelected">액션 편집</sys:String>

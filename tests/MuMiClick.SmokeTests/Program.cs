@@ -77,6 +77,9 @@ Check(chosen is not null && restoredWorkflow.Events[1].Branches!.Contains(chosen
 var moveGroup = EventListItem.Group(new MacroEvent { Kind = MacroEventKind.MouseMove, X = 10, Y = 20 });
 moveGroup.AddToGroup(new MacroEvent { Kind = MacroEventKind.MouseMove, X = 30, Y = 40 });
 Check(moveGroup.IsMouseMoveGroup && moveGroup.SourceEvents.Count == 2, "연속 마우스 이동 표시 그룹 구성");
+var highlightedRow = EventListItem.Single(new MacroEvent { Kind = MacroEventKind.KeyDown, VirtualKey = 0x41, ScanCode = 0x1E });
+highlightedRow.IsActive = true;
+Check(highlightedRow.IsActive, "재생 중인 이벤트 행 강조 상태");
 var clickPair = ActionEditorWindow.CreateMouseClickEvents(100, 320, 240, MouseButtonKind.Left, 45);
 var dragMove = new MacroEvent { TimeMs = 120, Kind = MacroEventKind.MouseMove, X = 350, Y = 260 };
 var clickSequence = new List<MacroEvent> { clickPair[0], dragMove, clickPair[1] };
