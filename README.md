@@ -51,7 +51,7 @@ Single keys and combinations such as `Ctrl+Alt+F8` are supported. Hotkeys must b
 
 Consecutive mouse-move events are collapsed into one row to keep recordings readable. Use the arrow on an individual group or **Expand moves** to inspect the original events.
 
-During playback, the active event is automatically selected and scrolled into view with a distinct blue highlight. If mouse moves are collapsed, their group row is highlighted instead.
+During playback, the active event is automatically selected and scrolled into view with a distinct blue highlight. If mouse moves are collapsed, their group row is highlighted instead. The final highlighted row remains selected after playback stops, including an emergency stop, until the next playback starts.
 
 The tools above the list are grouped to keep the workspace compact: **Data** contains Variables and Set clipboard; **Wait** contains Insert Save wait and Wait for text; **Actions** contains Random branch and Edit action. **Expand moves** and **Delete selected** remain immediately available.
 
