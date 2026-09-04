@@ -11,6 +11,20 @@ var playbackCallerThread = Environment.CurrentManagedThreadId;
 var playbackWorkerThread = playbackCallerThread;
 await MainWindow.RunPlaybackWorkerAsync(() => { playbackWorkerThread = Environment.CurrentManagedThreadId; return Task.CompletedTask; });
 Check(playbackWorkerThread != playbackCallerThread, "최고속 재생은 키보드 메시지 UI 스레드와 분리");
+if (NativeMethods.GetCursorPos(out var fastestMousePosition))
+{
+    var mouseOnlyFastest = new MacroDocument
+    {
+        Events =
+        [
+            new MacroEvent { TimeMs = 0, Kind = MacroEventKind.MouseMove, X = fastestMousePosition.X, Y = fastestMousePosition.Y },
+            new MacroEvent { TimeMs = 1, Kind = MacroEventKind.MouseMove, X = fastestMousePosition.X, Y = fastestMousePosition.Y }
+        ]
+    };
+    var mouseOnlyPlayer = new MacroPlayer();
+    await MainWindow.RunPlaybackWorkerAsync(() => mouseOnlyPlayer.PlayAsync(mouseOnlyFastest, 100, false, double.PositiveInfinity, 0, false, 0, CancellationToken.None));
+    Check(!mouseOnlyPlayer.IsPlaying, "마우스 전용 최고속 재생 100회 완료");
+}
 Check(LocalizationService.Resolve("ko-KR") == "ko-KR" && LocalizationService.Resolve("en-US") == "en-US", "한국어/영어 언어 선택 해석");
 var (mods, key) = HotkeyManager.Parse("F7");
 Check(mods == 0 && key == 0x76, "단일 키 긴급 중지 단축키 파싱");

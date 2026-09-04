@@ -179,9 +179,21 @@ public partial class MainWindow : Window
         _playbackCancel = playbackCancel;
         StatusText.Foreground = (System.Windows.Media.Brush)FindResource("StatusPlayingBrush"); StatusText.Text = LocalizationService.T("PlaybackReady"); _tray.Text = LocalizationService.T("TrayPlaying"); UpdateControls();
         var instantMouseDelay = int.TryParse(InstantMouseDelayBox.Text, out var parsedMouseDelay) ? Math.Clamp(parsedMouseDelay, 0, 500) : 30;
+        var instantMouseMovement = InstantMouseBox.IsChecked == true;
         try
         {
-            await RunPlaybackWorkerAsync(() => _player.PlayAsync(doc, repeat, infinite, speed, interval, InstantMouseBox.IsChecked == true, instantMouseDelay, playbackCancel.Token));
+            // Capture every WPF value before entering the worker. DependencyObjects may only
+            // be read by the UI thread that created them.
+            await RunPlaybackWorkerAsync(() => _player.PlayAsync(doc, repeat, infinite, speed, interval, instantMouseMovement, instantMouseDelay, playbackCancel.Token));
+        }
+        catch (OperationCanceledException)
+        {
+            SetIdle(LocalizationService.T("PlaybackStopped"));
+        }
+        catch (Exception ex)
+        {
+            _player.ReleaseAll();
+            SetIdle(LocalizationService.F("PlaybackErrorFormat", ex.Message));
         }
         finally
         {
