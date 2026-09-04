@@ -36,6 +36,9 @@ public partial class MainWindow : Window
     private EventListItem? _activeEventRow;
     private MacroEvent? _pendingHighlightAction;
     private int _highlightDispatchPending;
+    private PlaybackProgressState? _pendingPlaybackProgress;
+    private int _progressDispatchPending;
+    private CancellationTokenSource? _playbackCancel;
     private Stopwatch _recordWatch = new();
     private const string SettingsFileName = "settings.json";
 
@@ -53,10 +56,10 @@ public partial class MainWindow : Window
         InstantMouseBox.IsChecked = _settings.InstantMouseMovement;
         InstantMouseDelayBox.Text = Math.Clamp(_settings.InstantMouseDelayMs, 0, 500).ToString();
         _hook.Recorded += CaptureEvent;
-        _hook.PhysicalInput += () => { if (_player.IsPlaying && StopPhysicalBox.IsChecked == true) Dispatcher.BeginInvoke(StopPlayback); };
-        _player.Progress += (loop, total, progress) => Dispatcher.BeginInvoke(() => { StatusText.Text = LocalizationService.F("PlaybackStatusFormat", loop, total == long.MaxValue ? "∞" : total); DetailText.Text = LocalizationService.F("ProgressFormat", progress); ElapsedText.Text = progress.ToString("P0"); UpdateControls(); });
+        _hook.PhysicalInput += () => { if (PlaybackActive && StopPhysicalBox.IsChecked == true) Dispatcher.BeginInvoke(StopPlayback); };
+        _player.Progress += QueuePlaybackProgress;
         _player.ActionStarted += QueueActiveEventHighlight;
-        _player.Completed += text => Dispatcher.BeginInvoke(() => { SetIdle(text); UpdateControls(); });
+        _player.Completed += text => Dispatcher.BeginInvoke(() => { Interlocked.Exchange(ref _pendingPlaybackProgress, null); SetIdle(text); UpdateControls(); });
         _displayTimer = new DispatcherTimer { Interval = TimeSpan.FromMilliseconds(100) };
         _displayTimer.Tick += (_, _) => { if (_recording) ElapsedText.Text = _recordWatch.Elapsed.ToString(@"mm\:ss\.f"); };
         _displayTimer.Start();
@@ -127,7 +130,7 @@ public partial class MainWindow : Window
     }
     private async Task BeginRecordingAsync()
     {
-        if (_player.IsPlaying) return;
+        if (PlaybackActive) return;
         if (_recording || _countingDown) return;
         if (TargetRadio.IsChecked == true && _target is null) { WpfMessageBox.Show(LocalizationService.T("TargetRequired")); return; }
         _countingDown = true; _countdownCancel?.Dispose(); var countdown = _countdownCancel = CancellationTokenSource.CreateLinkedTokenSource(_lifetime.Token);
@@ -163,7 +166,7 @@ public partial class MainWindow : Window
     private async Task BeginPlaybackAsync()
     {
         if (_recording || _countingDown) { WpfMessageBox.Show(LocalizationService.T("EndRecordingFirst")); return; }
-        if (_player.IsPlaying) return;
+        if (PlaybackActive) return;
         var infinite = InfiniteBox.IsChecked == true;
         var repeat = 1;
         if (!infinite && (!int.TryParse(RepeatBox.Text, out repeat) || repeat < 1 || repeat > 1000000)) { WpfMessageBox.Show(LocalizationService.T("RepeatRange")); return; }
@@ -172,9 +175,20 @@ public partial class MainWindow : Window
         var speed = ParsePlaybackSpeed(speedItem.Tag?.ToString() ?? speedItem.Content?.ToString());
         var doc = new MacroDocument { Events = _events.ToList(), Variables = new(_variables, StringComparer.OrdinalIgnoreCase), VariableGroups = CloneVariableGroups(_variableGroups), CoordinateMode = TargetRadio.IsChecked == true ? CoordinateMode.TargetWindow : CoordinateMode.AbsoluteScreen, TargetWindow = _target };
         ClearActiveEvent();
+        var playbackCancel = CancellationTokenSource.CreateLinkedTokenSource(_lifetime.Token);
+        _playbackCancel = playbackCancel;
         StatusText.Foreground = (System.Windows.Media.Brush)FindResource("StatusPlayingBrush"); StatusText.Text = LocalizationService.T("PlaybackReady"); _tray.Text = LocalizationService.T("TrayPlaying"); UpdateControls();
         var instantMouseDelay = int.TryParse(InstantMouseDelayBox.Text, out var parsedMouseDelay) ? Math.Clamp(parsedMouseDelay, 0, 500) : 30;
-        await _player.PlayAsync(doc, repeat, infinite, speed, interval, InstantMouseBox.IsChecked == true, instantMouseDelay, _lifetime.Token);
+        try
+        {
+            await RunPlaybackWorkerAsync(() => _player.PlayAsync(doc, repeat, infinite, speed, interval, InstantMouseBox.IsChecked == true, instantMouseDelay, playbackCancel.Token));
+        }
+        finally
+        {
+            if (ReferenceEquals(_playbackCancel, playbackCancel)) _playbackCancel = null;
+            playbackCancel.Dispose();
+            UpdateControls();
+        }
     }
 
     internal static double ParsePlaybackSpeed(string? value)
@@ -186,16 +200,19 @@ public partial class MainWindow : Window
         return speed;
     }
 
+    internal static Task RunPlaybackWorkerAsync(Func<Task> playback) => Task.Run(playback);
+
     private void TogglePause()
     {
         _player.TogglePause();
-        if (_player.IsPlaying)
+        if (PlaybackActive)
         {
             DetailText.Text = LocalizationService.T(_player.IsPaused ? "PausedHelp" : "ResumedHelp");
             StatusText.Text = LocalizationService.T(_player.IsPaused ? "StatusPaused" : "StatusPlaying");
         }
     }
-    private void StopPlayback() { if (_player.IsPlaying) _player.Stop(); else _player.ReleaseAll(); }
+    private bool PlaybackActive => _playbackCancel is not null || _player.IsPlaying;
+    private void StopPlayback() { _playbackCancel?.Cancel(); if (_player.IsPlaying) _player.Stop(); else _player.ReleaseAll(); }
 
     private void HighlightActiveEvent(MacroEvent action)
     {
@@ -226,6 +243,28 @@ public partial class MainWindow : Window
         if (newerAction is not null) QueueActiveEventHighlight(newerAction);
     }
 
+    private void QueuePlaybackProgress(long loop, long total, double progress)
+    {
+        Interlocked.Exchange(ref _pendingPlaybackProgress, new PlaybackProgressState(loop, total, progress));
+        if (Interlocked.Exchange(ref _progressDispatchPending, 1) != 0) return;
+        Dispatcher.BeginInvoke(ProcessPendingPlaybackProgress, DispatcherPriority.Background);
+    }
+
+    private void ProcessPendingPlaybackProgress()
+    {
+        var state = Interlocked.Exchange(ref _pendingPlaybackProgress, null);
+        Interlocked.Exchange(ref _progressDispatchPending, 0);
+        if (state is not null && PlaybackActive)
+        {
+            StatusText.Text = LocalizationService.F("PlaybackStatusFormat", state.Loop, state.Total == long.MaxValue ? "∞" : state.Total);
+            DetailText.Text = LocalizationService.F("ProgressFormat", state.Progress);
+            ElapsedText.Text = state.Progress.ToString("P0");
+            UpdateControls();
+        }
+        var newerState = Interlocked.Exchange(ref _pendingPlaybackProgress, null);
+        if (newerState is not null) QueuePlaybackProgress(newerState.Loop, newerState.Total, newerState.Progress);
+    }
+
     private void ClearActiveEvent()
     {
         if (_activeEventRow is null) return;
@@ -241,8 +280,8 @@ public partial class MainWindow : Window
     private void UpdateControls()
     {
         // Prevent accidental recording or replay requests while the playback engine owns input.
-        RecordButton.IsEnabled = !_player.IsPlaying;
-        PlayButton.IsEnabled = !_recording && !_countingDown && !_player.IsPlaying;
+        RecordButton.IsEnabled = !PlaybackActive;
+        PlayButton.IsEnabled = !_recording && !_countingDown && !PlaybackActive;
     }
     private void AddEvent(MacroEvent item)
     {
@@ -355,7 +394,7 @@ public partial class MainWindow : Window
     }
     private void EditEvent_Click(object sender, RoutedEventArgs e)
     {
-        if (_recording || _countingDown || _player.IsPlaying) return;
+        if (_recording || _countingDown || PlaybackActive) return;
         var rows = EventList.SelectedItems.Cast<EventListItem>().ToList();
         if (rows.Count != 1) { WpfMessageBox.Show(this, LocalizationService.T("SelectOneActionToEdit")); return; }
         var row = rows[0];
@@ -584,6 +623,8 @@ public partial class MainWindow : Window
         catch { return new(); }
     }
     private static void SaveSettings(UserSettings settings) { Directory.CreateDirectory(Path.GetDirectoryName(SettingsPath)!); File.WriteAllText(SettingsPath, JsonSerializer.Serialize(settings, JsonOptions())); }
+
+    private sealed record PlaybackProgressState(long Loop, long Total, double Progress);
     private void Window_Closing(object? sender, CancelEventArgs e)
     {
         _settings.StabilizeSaveDialog = SaveDialogStabilizationBox.IsChecked == true;

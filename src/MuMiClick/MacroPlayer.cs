@@ -159,7 +159,15 @@ internal sealed class MacroPlayer
         for (var attempt = 0; attempt < 8; attempt++)
         {
             ct.ThrowIfCancellationRequested();
-            try { System.Windows.Clipboard.SetText(value ?? ""); return; }
+            try
+            {
+                var dispatcher = System.Windows.Application.Current?.Dispatcher;
+                if (dispatcher is not null && !dispatcher.CheckAccess())
+                    await dispatcher.InvokeAsync(() => System.Windows.Clipboard.SetText(value ?? ""), System.Windows.Threading.DispatcherPriority.Send, ct);
+                else
+                    System.Windows.Clipboard.SetText(value ?? "");
+                return;
+            }
             catch (COMException) when (attempt < 7) { await Task.Delay(25, ct); }
             catch (ExternalException) when (attempt < 7) { await Task.Delay(25, ct); }
         }
@@ -227,6 +235,7 @@ internal sealed class MacroPlayer
         signal.SetResult(true);
         return signal;
     }
+
     private void Send(MacroEvent e, IntPtr target)
     {
         int x = e.X, y = e.Y; if (target != IntPtr.Zero && e.Kind is MacroEventKind.MouseMove or MacroEventKind.MouseDown or MacroEventKind.MouseUp or MacroEventKind.MouseWheel) (x, y) = WindowLocator.ToScreen(target, x, y);
