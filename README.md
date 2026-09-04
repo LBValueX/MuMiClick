@@ -21,7 +21,7 @@ All macro data stays on your computer. MuMiClick has no ads, accounts, login, te
 1. Run `MuMiClick.exe`.
 2. Press **Record** or `F8`, then perform the mouse and keyboard actions you want to capture.
 3. Press `F8` again or click **Stop**.
-4. Choose the repeat count, playback speed, and loop delay, then click **Play** or press `F9`.
+4. Choose the repeat count, playback speed (`0.5x` to `10x`), and loop delay, then click **Play** or press `F9`.
 5. Press `F11` to pause or resume, and `F7` for emergency stop.
 6. Use **Save** to create a local `.mumacro` JSON file. The most recently loaded or saved macro is restored at the next launch.
 
