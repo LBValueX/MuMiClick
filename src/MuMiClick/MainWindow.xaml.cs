@@ -34,6 +34,8 @@ public partial class MainWindow : Window
     private bool _recording, _countingDown;
     private bool _saveDialogActiveDuringRecording;
     private EventListItem? _activeEventRow;
+    private MacroEvent? _pendingHighlightAction;
+    private int _highlightDispatchPending;
     private Stopwatch _recordWatch = new();
     private const string SettingsFileName = "settings.json";
 
@@ -53,7 +55,7 @@ public partial class MainWindow : Window
         _hook.Recorded += CaptureEvent;
         _hook.PhysicalInput += () => { if (_player.IsPlaying && StopPhysicalBox.IsChecked == true) Dispatcher.BeginInvoke(StopPlayback); };
         _player.Progress += (loop, total, progress) => Dispatcher.BeginInvoke(() => { StatusText.Text = LocalizationService.F("PlaybackStatusFormat", loop, total == long.MaxValue ? "∞" : total); DetailText.Text = LocalizationService.F("ProgressFormat", progress); ElapsedText.Text = progress.ToString("P0"); UpdateControls(); });
-        _player.ActionStarted += action => Dispatcher.BeginInvoke(() => HighlightActiveEvent(action));
+        _player.ActionStarted += QueueActiveEventHighlight;
         _player.Completed += text => Dispatcher.BeginInvoke(() => { SetIdle(text); UpdateControls(); });
         _displayTimer = new DispatcherTimer { Interval = TimeSpan.FromMilliseconds(100) };
         _displayTimer.Tick += (_, _) => { if (_recording) ElapsedText.Text = _recordWatch.Elapsed.ToString(@"mm\:ss\.f"); };
@@ -166,13 +168,24 @@ public partial class MainWindow : Window
         var repeat = 1;
         if (!infinite && (!int.TryParse(RepeatBox.Text, out repeat) || repeat < 1 || repeat > 1000000)) { WpfMessageBox.Show(LocalizationService.T("RepeatRange")); return; }
         if (!int.TryParse(IntervalBox.Text, out var interval) || interval < 0) { WpfMessageBox.Show(LocalizationService.T("IntervalInvalid")); return; }
-        var speed = double.Parse(((System.Windows.Controls.ComboBoxItem)SpeedBox.SelectedItem).Content!.ToString()![..^1], System.Globalization.CultureInfo.InvariantCulture);
+        var speedItem = (System.Windows.Controls.ComboBoxItem)SpeedBox.SelectedItem;
+        var speed = ParsePlaybackSpeed(speedItem.Tag?.ToString() ?? speedItem.Content?.ToString());
         var doc = new MacroDocument { Events = _events.ToList(), Variables = new(_variables, StringComparer.OrdinalIgnoreCase), VariableGroups = CloneVariableGroups(_variableGroups), CoordinateMode = TargetRadio.IsChecked == true ? CoordinateMode.TargetWindow : CoordinateMode.AbsoluteScreen, TargetWindow = _target };
         ClearActiveEvent();
         StatusText.Foreground = (System.Windows.Media.Brush)FindResource("StatusPlayingBrush"); StatusText.Text = LocalizationService.T("PlaybackReady"); _tray.Text = LocalizationService.T("TrayPlaying"); UpdateControls();
         var instantMouseDelay = int.TryParse(InstantMouseDelayBox.Text, out var parsedMouseDelay) ? Math.Clamp(parsedMouseDelay, 0, 500) : 30;
         await _player.PlayAsync(doc, repeat, infinite, speed, interval, InstantMouseBox.IsChecked == true, instantMouseDelay, _lifetime.Token);
     }
+
+    internal static double ParsePlaybackSpeed(string? value)
+    {
+        if (string.Equals(value, "Max", StringComparison.OrdinalIgnoreCase)) return double.PositiveInfinity;
+        if (string.IsNullOrWhiteSpace(value) || !value.EndsWith('x') ||
+            !double.TryParse(value[..^1], System.Globalization.NumberStyles.Float, System.Globalization.CultureInfo.InvariantCulture, out var speed) || speed <= 0)
+            throw new InvalidOperationException("Invalid playback speed.");
+        return speed;
+    }
+
     private void TogglePause()
     {
         _player.TogglePause();
@@ -195,6 +208,22 @@ public partial class MainWindow : Window
         EventList.SelectedItems.Clear();
         EventList.SelectedItem = row;
         EventList.ScrollIntoView(row);
+    }
+
+    private void QueueActiveEventHighlight(MacroEvent action)
+    {
+        Interlocked.Exchange(ref _pendingHighlightAction, action);
+        if (Interlocked.Exchange(ref _highlightDispatchPending, 1) != 0) return;
+        Dispatcher.BeginInvoke(ProcessPendingEventHighlight, DispatcherPriority.Background);
+    }
+
+    private void ProcessPendingEventHighlight()
+    {
+        var action = Interlocked.Exchange(ref _pendingHighlightAction, null);
+        Interlocked.Exchange(ref _highlightDispatchPending, 0);
+        if (action is not null) HighlightActiveEvent(action);
+        var newerAction = Interlocked.Exchange(ref _pendingHighlightAction, null);
+        if (newerAction is not null) QueueActiveEventHighlight(newerAction);
     }
 
     private void ClearActiveEvent()

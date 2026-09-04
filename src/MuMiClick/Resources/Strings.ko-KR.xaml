@@ -17,6 +17,7 @@
   <sys:String x:Key="SelectTarget">대상 창 선택</sys:String>
   <sys:String x:Key="RunAsAdmin">관리자 재실행</sys:String>
   <sys:String x:Key="Speed">속도</sys:String>
+  <sys:String x:Key="FastestSpeed">최고속</sys:String>
   <sys:String x:Key="RepeatInterval">반복 간격</sys:String>
   <sys:String x:Key="RecordingCountdown">녹화 전</sys:String>
   <sys:String x:Key="Second">초</sys:String>

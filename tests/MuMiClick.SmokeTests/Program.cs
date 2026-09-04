@@ -6,6 +6,7 @@ static void Check(bool value, string message) { if (!value) throw new Exception(
 Check(new UserSettings().StopOnPhysicalInput, "실제 입력 시 중지 기본 활성화");
 Check(new UserSettings().Language == "auto", "첫 실행 언어는 OS 자동 감지");
 Check(!new UserSettings().DarkMode, "다크 모드 기본 비활성화");
+Check(MainWindow.ParsePlaybackSpeed("20.0x") == 20d && double.IsPositiveInfinity(MainWindow.ParsePlaybackSpeed("Max")), "20배속 및 최고속 선택 해석");
 Check(LocalizationService.Resolve("ko-KR") == "ko-KR" && LocalizationService.Resolve("en-US") == "en-US", "한국어/영어 언어 선택 해석");
 var (mods, key) = HotkeyManager.Parse("F7");
 Check(mods == 0 && key == 0x76, "단일 키 긴급 중지 단축키 파싱");

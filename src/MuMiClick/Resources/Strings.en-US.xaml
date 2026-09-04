@@ -17,6 +17,7 @@
   <sys:String x:Key="SelectTarget">Select target window</sys:String>
   <sys:String x:Key="RunAsAdmin">Restart as administrator</sys:String>
   <sys:String x:Key="Speed">Speed</sys:String>
+  <sys:String x:Key="FastestSpeed">Fastest</sys:String>
   <sys:String x:Key="RepeatInterval">Loop delay</sys:String>
   <sys:String x:Key="RecordingCountdown">Countdown</sys:String>
   <sys:String x:Key="Second">sec</sys:String>
